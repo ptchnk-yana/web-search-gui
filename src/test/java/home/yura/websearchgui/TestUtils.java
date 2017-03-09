@@ -1,20 +1,33 @@
 package home.yura.websearchgui;
 
+import home.yura.websearchgui.util.LocalHttpUtils;
 import org.apache.commons.lang3.RandomUtils;
+import org.apache.http.HttpEntity;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.message.BasicHeader;
+import org.apache.http.protocol.BasicHttpContext;
+import org.apache.http.protocol.HttpContext;
 
 import java.io.InputStream;
+import java.util.Map;
 import java.util.UUID;
+import java.util.function.Supplier;
 
 import static home.yura.websearchgui.util.LocalBeans.gunzip;
 import static home.yura.websearchgui.util.LocalFunctions.process;
 import static org.apache.commons.io.IOUtils.toByteArray;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * @author yuriy.dunko on 06.03.17.
  */
 public class TestUtils {
 
-    public static String readGzipResource(String location) {
+    public static String readGzipResource(final String location) {
         return gunzip(process(() -> toByteArray(getResourceAsStream(location)), RuntimeException::new));
     }
 
@@ -30,7 +43,27 @@ public class TestUtils {
         return UUID.randomUUID().toString();
     }
 
-    public static <T> T random(T[] values) {
+    public static <T> T random(final T[] values) {
         return values[RandomUtils.nextInt(0, values.length)];
+    }
+
+    public static CloseableHttpClient createHttpClient(final Map<String, Supplier<InputStream>> contentMap)  {
+        final CloseableHttpClient httpClient = mock(CloseableHttpClient.class);
+        when(process(() -> httpClient.execute(any(HttpGet.class), any(HttpContext.class)), RuntimeException::new)).then(invocation -> {
+            final HttpGet request = invocation.getArgument(0);
+            final BasicHttpContext context = invocation.getArgument(1);
+
+            context.setAttribute(LocalHttpUtils.HTTP_ATTRIBUTE_TARGET_HOST, request.getURI());
+
+            final HttpEntity httpEntity = mock(HttpEntity.class);
+            when(httpEntity.getContent()).thenReturn(contentMap.get(request.getURI().toString()).get());
+            when(httpEntity.getContentType()).thenReturn(new BasicHeader("Content-Type", "text/html; charset=utf-8"));
+
+            final CloseableHttpResponse response = mock(CloseableHttpResponse.class);
+            when(response.getEntity()).thenReturn(httpEntity);
+
+            return response;
+        });
+        return httpClient;
     }
 }

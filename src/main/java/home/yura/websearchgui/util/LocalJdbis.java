@@ -24,7 +24,10 @@ import static java.lang.Enum.valueOf;
 /**
  * @author yuriy.dunko on 08.03.17.
  */
-public class LocalJdbis {
+public final class LocalJdbis {
+
+    private LocalJdbis(){
+    }
 
     public static void extractSubValueEvaluationDefinitions(final ResultSet rs,
                                                             final Map<String, Map<Integer, ValueEvaluationDefinition>> map,

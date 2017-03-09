@@ -53,44 +53,45 @@ public class SearchResultJdbiResourceDao extends AbstractJdbiResourceDao<SearchR
         @SqlUpdate("UPDATE search_result SET viewed = :viewed WHERE id = :id")
         int setViewed(@Bind("id") final int id, @Bind("viewed") final boolean viewed);
 
-        @SqlUpdate("INSERT INTO search_result (                                                                     " +
-                "   name, description, result_entry_definition_id, filter_item_id, internal_id, viewed              " +
-                ") VALUES (                                                                                         " +
-                "   :s.name, :s.description, :s.resultEntryDefinitionId, :s.filterItemId, :s.internalId, :s.viewed) ")
+        @SqlUpdate("INSERT INTO search_result (                                                                             " +
+                "   name, description, result_entry_definition_id, filter_item_id, internal_id, url, viewed                 " +
+                ") VALUES (                                                                                                 " +
+                "   :s.name, :s.description, :s.resultEntryDefinitionId, :s.filterItemId, :s.internalId, :s.url, :s.viewed)  ")
         @GetGeneratedKeys
         int insert(@BindBean("s") SearchResult s);
 
         @SqlUpdate("DELETE FROM search_result WHERE id = :id")
         int delete(@Bind("id") int id);
 
-        @SqlQuery("SELECT                                                                                   " +
-                "   id, name, description, result_entry_definition_id, filter_item_id, internal_id, viewed  " +
-                "FROM                                                                                       " +
-                "   search_result                                                                           " +
-                "WHERE                                                                                      " +
-                "   id = :id                                                                                ")
+        @SqlQuery("SELECT                                                                                       " +
+                "   id, name, description, result_entry_definition_id, filter_item_id, internal_id, url, viewed " +
+                "FROM                                                                                           " +
+                "   search_result                                                                               " +
+                "WHERE                                                                                          " +
+                "   id = :id                                                                                    ")
         SearchResult findById(@Bind("id") int id);
 
-        @SqlQuery("SELECT                                                                                   " +
-                "   id, name, description, result_entry_definition_id, filter_item_id, internal_id, viewed  " +
-                "FROM                                                                                       " +
-                "   search_result                                                                           ")
+        @SqlQuery("SELECT                                                                                       " +
+                "   id, name, description, result_entry_definition_id, filter_item_id, internal_id, url, viewed " +
+                "FROM                                                                                           " +
+                "   search_result                                                                               ")
         List<SearchResult> findAll();
 
-        @SqlQuery("SELECT                                                                                                       " +
-                "   sr.id, sr.name, sr.description, sr.result_entry_definition_id, sr.filter_item_id, sr.internal_id, sr.viewed " +
-                "FROM                                                                                                           " +
-                "   search_result sr                                                                                            " +
-                "   LEFT JOIN filter_item fi ON fi.id = sr.filter_item_id                                                       " +
-                "   LEFT JOIN filter f ON f.id = fi.filter_id                                                                   " +
-                "WHERE                                                                                                          " +
-                "   (:filterId IS NULL AND sr.filter_item_id IS NULL) OR f.id = :filterId                                       ")
+        @SqlQuery("SELECT                                                                   " +
+                "   sr.id, sr.name, sr.description, sr.result_entry_definition_id,          " +
+                "   sr.filter_item_id, sr.internal_id, sr.url, sr.viewed                    " +
+                "FROM                                                                       " +
+                "   search_result sr                                                        " +
+                "   LEFT JOIN filter_item fi ON fi.id = sr.filter_item_id                   " +
+                "   LEFT JOIN filter f ON f.id = fi.filter_id                               " +
+                "WHERE                                                                      " +
+                "   (:filterId IS NULL AND sr.filter_item_id IS NULL) OR f.id = :filterId   ")
         List<SearchResult> findByFilterId(@Bind("filterId") final Integer filterId);
     }
 
     public static class SearchResultJdbiMapper implements ResultSetMapper<SearchResult> {
         @Override
-        public SearchResult map(int index, ResultSet r, StatementContext ctx) throws SQLException {
+        public SearchResult map(final int index, final ResultSet r, final StatementContext ctx) throws SQLException {
             return SearchResult.create(
                     r.getInt("id"),
                     r.getString("name"),
@@ -98,6 +99,7 @@ public class SearchResultJdbiResourceDao extends AbstractJdbiResourceDao<SearchR
                     r.getInt("result_entry_definition_id"),
                     LocalJdbis.extractIntValue(r, "filter_item_id", null),
                     r.getLong("internal_id"),
+                    r.getString("url"),
                     r.getBoolean("viewed"));
         }
     }

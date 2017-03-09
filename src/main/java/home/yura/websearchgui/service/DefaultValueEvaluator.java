@@ -43,6 +43,7 @@ public class DefaultValueEvaluator implements ValueEvaluator {
             .maximumSize(50)
             .expireAfterWrite(10, TimeUnit.MINUTES)
             .build(new CacheLoader<String, Pattern>() {
+                @Override
                 public Pattern load(@Nullable final String key) {
                     return Pattern.compile(requireNonNull(key, "key cannot be null"), Pattern.MULTILINE);
                 }
@@ -50,12 +51,16 @@ public class DefaultValueEvaluator implements ValueEvaluator {
 
     @Override
     public String evaluate(final Map<Integer, ValueEvaluationDefinition> definitionChain, final Element document) {
+        final BiTuple<Supplier<Element>, Supplier<String>> tuple =
+                definitionChain.values().stream().anyMatch(d -> d.getType().isContentModifying())
+                        ? content(() -> document, document.outerHtml())
+                        : document(document);
         return Optional.ofNullable(definitionChain
                 .entrySet()
                 .stream()
                 .sorted(comparingByKey())
                 .map(Entry::getValue)
-                .reduce(content(() -> document, document.outerHtml()),
+                .reduce(tuple,
                         (base, entry) -> {
                             if (base == null) {
                                 return null;
@@ -63,20 +68,11 @@ public class DefaultValueEvaluator implements ValueEvaluator {
                             return EVALUATORS_FACTORY.get(entry).evaluate(base.getFirst(), base.getSecond(), entry.getExpression());
                         },
                         (f, s) -> {
-                            throw new IllegalArgumentException("Cannot combine [" + f + "] with [" + s + "]");
+                            // just in case if we run in parallel stream
+                            throw new IllegalArgumentException("Combine action isn't supported");
                         }))
                 .map(t -> t.getSecond().get())
                 .orElse(null);
-        // TODO: remove commented code
-//        BiTuple<Supplier<Element>, Supplier<String>> base = content(() -> document, document.outerHtml());
-//        for (final ValueEvaluationDefinition entry : definitionChain.entrySet()
-//                .stream()
-//                .sorted(comparingByKey())
-//                .map(Entry::getValue)
-//                .collect(toList())) {
-//            base = EVALUATORS_FACTORY.get(entry).evaluate(base.getFirst(), base.getSecond(), entry.getExpression());
-//        }
-//        return base.getSecond().get();
     }
 
     interface Evaluator {

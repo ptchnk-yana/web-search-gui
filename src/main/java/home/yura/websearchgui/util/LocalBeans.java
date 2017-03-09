@@ -24,7 +24,7 @@ import static java.util.Objects.requireNonNull;
 /**
  * @author yuriy.dunko on 03.03.17.
  */
-public class LocalBeans {
+public final class LocalBeans {
     private LocalBeans() {
 
     }
@@ -42,32 +42,6 @@ public class LocalBeans {
                         prefix + o.getName(),
                         process(() -> o.getReadMethod().invoke(bean), RuntimeException::new)));
         return map;
-    }
-
-    public static <T> Map<Integer, T> index(final List<T> list) {
-        final Map<Integer, T> map = new HashMap<>();
-        for(final ListIterator<T> iterator = list.listIterator(); iterator.hasNext();) {
-            map.put(iterator.nextIndex(), iterator.next());
-        }
-        return map;
-    }
-
-    public static byte[] gzip(final String content) {
-        final ByteArrayOutputStream bout = new ByteArrayOutputStream();
-        try (final GZIPOutputStream output = new GZIPOutputStream(bout)) {
-            output.write(requireNonNull(content, "content cannot be null").getBytes(UTF_8));
-        } catch (final IOException ex) {
-            throw new IllegalArgumentException(ex);
-        }
-        return bout.toByteArray();
-    }
-
-    public static String gunzip(final byte[] content) {
-        try (final GZIPInputStream input = new GZIPInputStream(new ByteArrayInputStream(requireNonNull(content, "content cannot be null")))) {
-            return IOUtils.toString(input, UTF_8.name());
-        } catch (final IOException ex) {
-            throw new IllegalArgumentException(ex);
-        }
     }
 
     public static long extractLong(final String content) {
@@ -91,5 +65,23 @@ public class LocalBeans {
             return ((ByteBuffer) ByteBuffer.allocate(Long.BYTES).put(buffer).flip()).getLong();
         }
         return aLong;
+    }
+
+    public static byte[] gzip(final String content) {
+        final ByteArrayOutputStream bout = new ByteArrayOutputStream();
+        try (final GZIPOutputStream output = new GZIPOutputStream(bout)) {
+            output.write(requireNonNull(content, "content cannot be null").getBytes(UTF_8));
+        } catch (final IOException ex) {
+            throw new IllegalArgumentException(ex);
+        }
+        return bout.toByteArray();
+    }
+
+    public static String gunzip(final byte[] content) {
+        try (final GZIPInputStream input = new GZIPInputStream(new ByteArrayInputStream(requireNonNull(content, "content cannot be null")))) {
+            return IOUtils.toString(input, UTF_8.name());
+        } catch (final IOException ex) {
+            throw new IllegalArgumentException(ex);
+        }
     }
 }
