@@ -1,30 +1,20 @@
 package home.yura.websearchgui.service.job;
 
-import com.google.common.base.Strings;
 import home.yura.websearchgui.model.ResultEntryDefinition;
 import home.yura.websearchgui.model.Search;
 import home.yura.websearchgui.model.SearchResult;
 import home.yura.websearchgui.service.ValueEvaluator;
+import home.yura.websearchgui.util.LocalHttpUtils;
 import home.yura.websearchgui.util.bean.BiTuple;
-import org.apache.commons.io.IOUtils;
-import org.apache.http.HttpEntity;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.entity.ContentType;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.message.BasicHeader;
-import org.apache.http.protocol.BasicHttpContext;
 import org.easybatch.core.reader.RecordReader;
 import org.easybatch.core.record.GenericRecord;
 import org.easybatch.core.record.Header;
 import org.easybatch.core.record.Record;
-import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
@@ -39,17 +29,12 @@ import static com.google.common.collect.Iterables.getFirst;
 import static home.yura.websearchgui.util.LocalBeans.extractLong;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
-import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toList;
-import static org.apache.http.entity.ContentType.TEXT_HTML;
 
 /**
  * @author yuriy.dunko on 04.03.17.
  */
 public class SearchRecordReader implements RecordReader {
-
-    static final String HTTP_ATTRIBUTE_TARGET_HOST = "http.target_host";
-    static final String HTTP_HEADER_LOCATION = "Location";
 
     // services
 
@@ -65,6 +50,9 @@ public class SearchRecordReader implements RecordReader {
      * The final internalId which the reader should stop on. It should be the first read id from previous run
      */
     private final Long finalInternalId;
+    /**
+     * Number of <b>pages</b> that should be read
+     */
     private final int readLimit;
 
     // processing step item
@@ -111,21 +99,15 @@ public class SearchRecordReader implements RecordReader {
             return null;
         }
 
-        final Document document = readDocument();
-
-        this.nextUrlLink = evaluateNextUrlLinkValue(document);
-
-        final Elements entryBlocks = document.select(this.resultEntryDefinition.getEntryBlockLocation());
-        checkState(!entryBlocks.isEmpty(),
-                format("Cannot find resultEntryDefinition using [%s] query on [%s] address",
-                        this.resultEntryDefinition.getEntryBlockLocation(),
-                        document.baseUri()));
-
+        final Document document = LocalHttpUtils.readDocument(this.client, this.nextUrlLink);
+        final Elements entryBlocks = getEntryBlocks(document);
         final List<SearchResult> searchResults = entryBlocks
                 .parallelStream()
                 .map(this::buildSearchResult)
                 .sorted(Comparator.comparingLong(SearchResult::getInternalId))
                 .collect(toList());
+
+        this.nextUrlLink = evaluateNextUrlLinkValue(document);
 
         if (this.firstInternalId == null) {
             this.firstInternalId = requireNonNull(getFirst(searchResults, null)).getInternalId();
@@ -152,27 +134,13 @@ public class SearchRecordReader implements RecordReader {
         this.client.close();
     }
 
-    private Document readDocument() throws IOException {
-        final BasicHttpContext httpContext = new BasicHttpContext();
-        try (final CloseableHttpResponse response = this.client.execute(new HttpGet(this.nextUrlLink), httpContext)) {
-            final HttpEntity entity = response.getEntity();
-            final Document document;
-            try (final InputStream input = entity.getContent()){
-                document = Jsoup.parse(IOUtils.toString(input,
-                        ofNullable(ContentType.get(entity)).orElse(TEXT_HTML).getCharset().name())).normalise();
-            }
-            document.setBaseUri(evaluateBaseUri(httpContext, response));
-            return document;
-        }
-    }
-
-    private String evaluateBaseUri(final BasicHttpContext httpContext, final CloseableHttpResponse response) {
-        return ofNullable(httpContext.getAttribute(HTTP_ATTRIBUTE_TARGET_HOST))
-                .orElseGet(() ->
-                        ofNullable(response.getFirstHeader(HTTP_HEADER_LOCATION))
-                                .orElse(new BasicHeader(HTTP_HEADER_LOCATION, this.nextUrlLink))
-                                .getValue())
-                .toString();
+    private Elements getEntryBlocks(final Document document) {
+        final Elements entryBlocks = document.select(this.resultEntryDefinition.getEntryBlockLocation());
+        checkState(!entryBlocks.isEmpty(),
+                format("Cannot find resultEntryDefinition using [%s] query on [%s] address",
+                        this.resultEntryDefinition.getEntryBlockLocation(),
+                        document.baseUri()));
+        return entryBlocks;
     }
 
     private String evaluateNextUrlLinkValue(final Document document) {
@@ -180,14 +148,13 @@ public class SearchRecordReader implements RecordReader {
     }
 
     private SearchResult buildSearchResult(final Element element) {
-        return SearchResult
-                .create(null,
-                        this.valueEvaluator.evaluate(this.resultEntryDefinition.getNameExtractionChain(), element),
-                        element.outerHtml(),
-                        this.resultEntryDefinition.getId(),
-                        null,
-                        extractLong(this.valueEvaluator.evaluate(
-                                this.resultEntryDefinition.getInternalIdExtractionChain(), element)),
-                        false);
+        return SearchResult.create(null, // id
+                this.valueEvaluator.evaluate(this.resultEntryDefinition.getNameExtractionChain(), element),
+                element.outerHtml(),
+                this.resultEntryDefinition.getId(),
+                null, // filterId
+                extractLong(this.valueEvaluator.evaluate(this.resultEntryDefinition.getInternalIdExtractionChain(), element)),
+                this.valueEvaluator.evaluate(this.resultEntryDefinition.getContentLinkExtractionChain(), element),
+                false);
     }
 }

@@ -129,6 +129,7 @@ public class AbstractJdbiTest {
                 resultEntryDefinitionId,
                 filterItemId,
                 TestUtils.randomLong(),
+                TestUtils.randomString(),
                 false);
     }
 

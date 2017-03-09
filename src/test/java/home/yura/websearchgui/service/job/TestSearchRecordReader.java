@@ -1,6 +1,7 @@
 package home.yura.websearchgui.service.job;
 
 import com.google.common.collect.ImmutableMap;
+import home.yura.websearchgui.TestUtils;
 import home.yura.websearchgui.model.ResultEntryDefinition;
 import home.yura.websearchgui.model.Search;
 import home.yura.websearchgui.model.SearchResult;
@@ -8,19 +9,11 @@ import home.yura.websearchgui.model.ValueEvaluationDefinition;
 import home.yura.websearchgui.service.DefaultValueEvaluator;
 import home.yura.websearchgui.service.ValueEvaluator;
 import home.yura.websearchgui.util.bean.BiTuple;
-import org.apache.http.HttpEntity;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.message.BasicHeader;
-import org.apache.http.protocol.BasicHttpContext;
-import org.apache.http.protocol.HttpContext;
 import org.easybatch.core.record.Record;
 import org.junit.Test;
 
-import java.io.IOException;
 import java.io.InputStream;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
@@ -31,18 +24,14 @@ import static home.yura.websearchgui.TestUtils.getResourceAsStream;
 import static home.yura.websearchgui.model.ValueEvaluationDefinition.ValueEvaluationDefinitionEngine.CSS_QUERY_SEARCH;
 import static home.yura.websearchgui.model.ValueEvaluationDefinition.ValueEvaluationDefinitionEngine.REG_EXP;
 import static home.yura.websearchgui.model.ValueEvaluationDefinition.ValueEvaluationDefinitionType.EXTRACT_CONTENT;
-import static home.yura.websearchgui.util.LocalBeans.index;
+import static home.yura.websearchgui.util.LocalCollections.index;
 import static home.yura.websearchgui.util.LocalFunctions.process;
 import static java.util.stream.Collectors.toList;
-import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInAnyOrder;
 import static org.junit.Assert.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 /**
  * Test for {@link SearchRecordReader}
@@ -63,18 +52,19 @@ public class TestSearchRecordReader {
             PAGE_3_URL, () -> process(() -> new GZIPInputStream(getResourceAsStream(PAGE_3_LOCATION)), RuntimeException::new)
     );
 
-    private final ValueEvaluator entryProcessService = new DefaultValueEvaluator();
+    private static final ValueEvaluator VALUE_EVALUATOR = new DefaultValueEvaluator();
 
     @Test
     public void testReadRecord() throws Exception {
-        final CloseableHttpClient httpClient = createHttpClient();
+        final CloseableHttpClient httpClient = TestUtils.createHttpClient(CONTENT_MAP);
 
-        final SearchRecordReader reader = new SearchRecordReader(this.entryProcessService, () -> httpClient,
+        final SearchRecordReader reader = new SearchRecordReader(VALUE_EVALUATOR, () -> httpClient,
                 null, Integer.MAX_VALUE, createSearchTuple());
         reader.open();
         Record<List<SearchResult>> record = reader.readRecord();
         assertThat(record, notNullValue());
         assertThat(record.getPayload(), hasSize(44));
+//        record.getPayload().stream().sorted(java.util.Comparator.comparingLong(SearchResult::getInternalId)).forEach(System.out::println);
         assertThat(record.getPayload().stream().map(SearchResult::getName).collect(toList()), containsInAnyOrder(
                 "Продам ВАЗ 2115 газ", "Hyundai Accent 2013", "Рено Меган грандтур 2013", "Продам кадика по запчастям",
                 "Volkswagen Passat B7", "Renault Laguna 2.0 TDI BOSE INITIALE 2012 самая макс ком-ция 180 л с",
@@ -104,9 +94,9 @@ public class TestSearchRecordReader {
 
     @Test
     public void testReadRecordLimi() throws Exception {
-        final CloseableHttpClient httpClient = createHttpClient();
+        final CloseableHttpClient httpClient = TestUtils.createHttpClient(CONTENT_MAP);
 
-        final SearchRecordReader reader = new SearchRecordReader(this.entryProcessService, () -> httpClient,
+        final SearchRecordReader reader = new SearchRecordReader(VALUE_EVALUATOR, () -> httpClient,
                 null, 1, createSearchTuple());
         reader.open();
 
@@ -121,9 +111,9 @@ public class TestSearchRecordReader {
 
     @Test
     public void testReadRecordFinalInternalId() throws Exception {
-        final CloseableHttpClient httpClient = createHttpClient();
+        final CloseableHttpClient httpClient = TestUtils.createHttpClient(CONTENT_MAP);
 
-        final SearchRecordReader reader = new SearchRecordReader(this.entryProcessService, () -> httpClient,
+        final SearchRecordReader reader = new SearchRecordReader(VALUE_EVALUATOR, () -> httpClient,
                 382945664L, Integer.MAX_VALUE, createSearchTuple());
         reader.open();
 
@@ -154,30 +144,10 @@ public class TestSearchRecordReader {
                         index(of(ValueEvaluationDefinition.create(1, EXTRACT_CONTENT, CSS_QUERY_SEARCH, "h3 a strong"),
                                 ValueEvaluationDefinition.create(null, EXTRACT_CONTENT, REG_EXP, "<\\w+>(.+)</\\w+>"))),
                         index(of(ValueEvaluationDefinition.create(1, EXTRACT_CONTENT, CSS_QUERY_SEARCH, "h3 a"),
-                                ValueEvaluationDefinition.create(null, EXTRACT_CONTENT, REG_EXP, "href=\"(.+)\""))),
+                                ValueEvaluationDefinition.create(null, EXTRACT_CONTENT, REG_EXP, "href=\"(.+)\\#.+\""))),
                         index(of(ValueEvaluationDefinition.create(1, EXTRACT_CONTENT, CSS_QUERY_SEARCH, "tr:eq(1) td.tright div div a"),
                                 ValueEvaluationDefinition.create(null, EXTRACT_CONTENT, REG_EXP, "class=\"\\{id:(\\d+)\\}"))),
                         null));
-    }
-
-    private CloseableHttpClient createHttpClient() throws IOException {
-        final CloseableHttpClient httpClient = mock(CloseableHttpClient.class);
-        when(httpClient.execute(any(HttpGet.class), any(HttpContext.class))).then(invocation -> {
-            final HttpGet request = invocation.getArgument(0);
-            final BasicHttpContext context = invocation.getArgument(1);
-
-            context.setAttribute(SearchRecordReader.HTTP_ATTRIBUTE_TARGET_HOST, request.getURI());
-
-            final HttpEntity httpEntity = mock(HttpEntity.class);
-            when(httpEntity.getContent()).thenReturn(CONTENT_MAP.get(request.getURI().toString()).get());
-            when(httpEntity.getContentType()).thenReturn(new BasicHeader("Content-Type", "text/html; charset=utf-8"));
-
-            final CloseableHttpResponse response = mock(CloseableHttpResponse.class);
-            when(response.getEntity()).thenReturn(httpEntity);
-
-            return response;
-        });
-        return httpClient;
     }
 
 }

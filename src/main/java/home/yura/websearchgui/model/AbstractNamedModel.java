@@ -1,7 +1,7 @@
 package home.yura.websearchgui.model;
 
 /**
- * Created by yura on 26.02.17.
+ * @author yuriy.dunko on 26.02.17.
  */
 public interface AbstractNamedModel extends AbstractModel {
 

@@ -68,8 +68,9 @@ CREATE TABLE search_result (
     result_entry_definition_id INT NOT NULL REFERENCES result_entry_definition (id),
     filter_item_id INT REFERENCES filter_item (id),
     internal_id BIGINT NOT NULL,
+    url VARCHAR(256) NOT NULL,
     viewed TINYINT(1) DEFAULT 0,
 
-    UNIQUE KEY (internal_id),
+    UNIQUE KEY (result_entry_definition_id, internal_id),
     CHECK (viewed IN (0, 1))
 );

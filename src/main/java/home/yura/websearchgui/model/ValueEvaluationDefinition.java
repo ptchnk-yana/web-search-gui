@@ -10,8 +10,18 @@ import com.google.auto.value.AutoValue;
 public abstract class ValueEvaluationDefinition implements AbstractModel {
 
     public enum ValueEvaluationDefinitionType {
-        EXTRACT_CONTENT,
-        DELETE_CONTENT_PART
+        EXTRACT_CONTENT(false),
+        DELETE_CONTENT_PART(true);
+
+        private final boolean contentModifying;
+
+        ValueEvaluationDefinitionType(final boolean contentModifying) {
+            this.contentModifying = contentModifying;
+        }
+
+        public boolean isContentModifying() {
+            return contentModifying;
+        }
     }
 
     public enum ValueEvaluationDefinitionEngine {
