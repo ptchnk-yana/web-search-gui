@@ -47,17 +47,17 @@ public abstract class Filter implements AbstractNamedModel {
         @Nullable
         public abstract Builder setFilterItems(List<FilterItem> filterItems);
 
-        public Builder addFilterItem(FilterItem filterItem) {
+        public Builder addFilterItem(final FilterItem filterItem) {
             List<FilterItem> items = getFilterItems();
             if (items == null) {
                 setFilterItems(items = new ArrayList<>());
             }
-            items.add(checkNotNull(filterItem, "item cannot be null"));
+            items.add(checkNotNull(filterItem, "item"));
             return this;
         }
 
         public Filter build() {
-            Filter source = buildInternal();
+            final Filter source = buildInternal();
             return new AutoValue_Filter.Builder(source)
                     .setFilterItems(copyOf(firstNonNull(source.getFilterItems(), of())))
                     .buildInternal();

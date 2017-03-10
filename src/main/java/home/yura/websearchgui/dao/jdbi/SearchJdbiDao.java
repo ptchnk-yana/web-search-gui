@@ -21,7 +21,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static java.util.Objects.requireNonNull;
+import static home.yura.websearchgui.util.LocalFunctions.requireNonNull;
 
 /**
  * @author yuriy.dunko on 26.02.17.
@@ -101,7 +101,7 @@ public class SearchJdbiDao extends AbstractJdbiDao<Search> implements SearchDao 
 
     @Override
     public Search add(final Search search) {
-        requireNonNull(search, "search cannot be null");
+        requireNonNull(search, "search");
         final Map<String, Map<Integer, ValueEvaluationDefinition>> valueEvaluationDefinitionsMap = ImmutableMap
                 .of(PREVIOUS_LINK_DESTINATION, search.getPreviousLinkLocation(),
                         NEXT_LINK_DESTINATION, search.getNextLinkLocation());
@@ -120,7 +120,7 @@ public class SearchJdbiDao extends AbstractJdbiDao<Search> implements SearchDao 
 
     @Override
     public int delete(final Search search) {
-        requireNonNull(search, "search cannot be null");
+        requireNonNull(search, "search");
         return this.dbi.inTransaction((handle, status) ->
                 handle.createStatement(DELETE_SEARCH_SQL).bind("id", search.getId()).execute());
     }

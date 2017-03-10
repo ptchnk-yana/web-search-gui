@@ -13,6 +13,6 @@ public abstract class AbstractJdbiDao<T extends AbstractModel> implements Abstra
     protected final DBI dbi;
 
     AbstractJdbiDao(final DBI dbi) {
-        this.dbi = Objects.requireNonNull(dbi, "DBI cannot be null");
+        this.dbi = Objects.requireNonNull(dbi, "DBI");
     }
 }

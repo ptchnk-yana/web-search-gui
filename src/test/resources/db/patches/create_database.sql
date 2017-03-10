@@ -43,7 +43,7 @@ CREATE TABLE filter_item (
     CHECK (
         filter_location IN ('URL', 'CONTENT')
         AND filter_engine IN ('REG_EXP', 'STRING_SEARCH')
-        AND filter_pre_formatting IN ('NO', 'ESCAPE_HTML', 'ESCAPE_URL'))
+        AND filter_pre_formatting IN ('NO', 'CLEAR_HTML', 'ESCAPE_URL'))
 );
 
 CREATE TABLE result_entry_definition (

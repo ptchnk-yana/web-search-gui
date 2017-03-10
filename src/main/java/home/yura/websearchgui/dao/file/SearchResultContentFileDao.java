@@ -24,13 +24,12 @@ import java.util.stream.Collectors;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
-import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static home.yura.websearchgui.util.LocalFunctions.process;
+import static home.yura.websearchgui.util.LocalFunctions.requireNonNull;
 
 /**
  * @author yura
- * @deprecated it use to much space :(
  */
 public class SearchResultContentFileDao implements SearchResultContentDao {
 
@@ -40,11 +39,15 @@ public class SearchResultContentFileDao implements SearchResultContentDao {
     private final Function<InputStream, InputStream> coverInput;
     private final Function<OutputStream, OutputStream> coverOutput;
 
-    public static SearchResultContentFileDao plainFile(File rootFolder, ExecutorService fileExecutor, String encoding) {
+    public static SearchResultContentFileDao plainFile(final File rootFolder,
+                                                       final ExecutorService fileExecutor,
+                                                       final String encoding) {
         return new SearchResultContentFileDao(rootFolder, fileExecutor, encoding, is -> is, os -> os);
     }
 
-    public static SearchResultContentFileDao gzipFile(File rootFolder, ExecutorService fileExecutor, String encoding) {
+    public static SearchResultContentFileDao gzipFile(final File rootFolder,
+                                                      final ExecutorService fileExecutor,
+                                                      final String encoding) {
         return new SearchResultContentFileDao(rootFolder,
                 fileExecutor,
                 encoding,
@@ -52,14 +55,14 @@ public class SearchResultContentFileDao implements SearchResultContentDao {
                 os -> process(() -> new GZIPOutputStream(os), RuntimeException::new));
     }
 
-    private SearchResultContentFileDao(File rootFolder,
-                                      ExecutorService fileExecutor,
-                                      String encoding,
-                                      Function<InputStream, InputStream> coverInput,
-                                      Function<OutputStream, OutputStream> coverOutput) {
-        this.rootFolder = checkNotNull(rootFolder, "rootFolder cannot be null");
-        this.fileExecutor = checkNotNull(fileExecutor, "fileExecutor cannot be null");
-        this.encoding = checkNotNull(encoding, "encoding cannot be null");
+    private SearchResultContentFileDao(final File rootFolder,
+                                       final ExecutorService fileExecutor,
+                                       final String encoding,
+                                       final Function<InputStream, InputStream> coverInput,
+                                       final Function<OutputStream, OutputStream> coverOutput) {
+        this.rootFolder = requireNonNull(rootFolder, "rootFolder");
+        this.fileExecutor = requireNonNull(fileExecutor, "fileExecutor");
+        this.encoding = requireNonNull(encoding, "encoding");
         this.coverInput = coverInput;
         this.coverOutput = coverOutput;
 
@@ -72,11 +75,11 @@ public class SearchResultContentFileDao implements SearchResultContentDao {
 
     @Override
     public SearchResultContent add(final SearchResultContent content) {
-        final Integer id = checkNotNull(content.getId(), "Content id cannot be null");
+        final Integer id = requireNonNull(content.getId(), "Content id");
         final Future<?> submit = this.fileExecutor.submit(() -> {
             try (OutputStream out = this.coverOutput.apply(new FileOutputStream(getContentFile(id)))) {
                 IOUtils.write(content.getContent(), out, this.encoding);
-            } catch (IOException e) {
+            } catch (final IOException e) {
                 throw new RuntimeException("Content " + id + " cannot be stored", e);
             }
         });
@@ -97,9 +100,9 @@ public class SearchResultContentFileDao implements SearchResultContentDao {
     }
 
     @Override
-    public int delete(SearchResultContent content) {
-        Future<Boolean> submit = this.fileExecutor.submit(() -> {
-            File file = getContentFile(content.getId());
+    public int delete(final SearchResultContent content) {
+        final Future<Boolean> submit = this.fileExecutor.submit(() -> {
+            final File file = getContentFile(content.getId());
             checkState(file.delete(), "File " + file.getAbsolutePath() + " cannot be deleted");
             return true;
         });
@@ -107,7 +110,7 @@ public class SearchResultContentFileDao implements SearchResultContentDao {
     }
 
     @Override
-    public Supplier<Integer> batchDelete(Function<Integer, List<Integer>> idSupplier) {
+    public Supplier<Integer> batchDelete(final Function<Integer, List<Integer>> idSupplier) {
         final AtomicInteger count = new AtomicInteger();
         final List<Future<Boolean>> results = new ArrayList<>();
         int readNumber = 0;
@@ -117,7 +120,7 @@ public class SearchResultContentFileDao implements SearchResultContentDao {
             results.add(this.fileExecutor.submit(() -> {
                 list.forEach(i -> {
                     count.incrementAndGet();
-                    File file = getContentFile(i);
+                    final File file = getContentFile(i);
                     checkState(file.delete(), "File " + file.getAbsolutePath() + " cannot be deleted");
                 });
                 return true;
@@ -131,13 +134,13 @@ public class SearchResultContentFileDao implements SearchResultContentDao {
     }
 
     @Override
-    public SearchResultContent get(SearchResult definition) {
-        return get(checkNotNull(checkNotNull(definition, "SearchResult is null").getId()));
+    public SearchResultContent get(final SearchResult definition) {
+        return get(requireNonNull(requireNonNull(definition, "SearchResult").getId()));
     }
 
     @Override
     public SearchResultContent get(final int id) {
-        Future<String> submit = this.fileExecutor.submit(() -> readFile(getContentFile(id)));
+        final Future<String> submit = this.fileExecutor.submit(() -> readFile(getContentFile(id)));
         return new SearchResultContent() {
             @Override
             public int getSearchResultId() {
@@ -153,7 +156,7 @@ public class SearchResultContentFileDao implements SearchResultContentDao {
 
     @Override
     public List<SearchResultContent> list() {
-        return Arrays.stream(checkNotNull(this.rootFolder.listFiles()))
+        return Arrays.stream(requireNonNull(this.rootFolder.listFiles()))
                 .filter(file -> Ints.tryParse(file.getName()) != null)
                 .map(file -> new SearchResultContent() {
                     String content = null;
@@ -177,14 +180,14 @@ public class SearchResultContentFileDao implements SearchResultContentDao {
         return SearchResultContent.class;
     }
 
-    private File getContentFile(Integer id) {
-        return new File(this.rootFolder, String.valueOf(checkNotNull(id)));
+    private File getContentFile(final Integer id) {
+        return new File(this.rootFolder, String.valueOf(requireNonNull(id)));
     }
 
-    private String readFile(File file) {
+    private String readFile(final File file) {
         try (InputStream is = this.coverInput.apply(new FileInputStream(file))) {
             return IOUtils.toString(is, this.encoding);
-        } catch (IOException e) {
+        } catch (final IOException e) {
             throw new RuntimeException("Content " + file.getName() + " cannot be read", e);
         }
     }

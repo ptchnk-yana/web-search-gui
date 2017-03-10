@@ -22,7 +22,7 @@ import java.util.stream.Stream;
 import static home.yura.websearchgui.util.LocalBeans.beanToMap;
 import static home.yura.websearchgui.util.LocalJdbis.extractIntValue;
 import static home.yura.websearchgui.util.LocalJdbis.extractSubValueEvaluationDefinitions;
-import static java.util.Objects.requireNonNull;
+import static home.yura.websearchgui.util.LocalFunctions.requireNonNull;
 import static java.util.stream.Collectors.toList;
 
 /**
@@ -108,7 +108,7 @@ public class ResultEntryDefinitionJdbiDao extends AbstractJdbiDao<ResultEntryDef
 
     @Override
     public ResultEntryDefinition add(final ResultEntryDefinition definition) {
-        requireNonNull(definition, "resultEntryDefinition cannot be null");
+        requireNonNull(definition, "resultEntryDefinition");
         final ImmutableMap<String, Map<Integer, ValueEvaluationDefinition>> valueEvaluationDefinitionsMap = ImmutableMap
                 .of(NAME_DESTINATION, definition.getNameExtractionChain(),
                         CONTENT_LINK_DESTINATION, definition.getContentLinkExtractionChain(),
@@ -129,7 +129,7 @@ public class ResultEntryDefinitionJdbiDao extends AbstractJdbiDao<ResultEntryDef
 
     @Override
     public int delete(final ResultEntryDefinition definition) {
-        requireNonNull(definition, "resultEntryDefinition cannot be null");
+        requireNonNull(definition, "resultEntryDefinition");
         return this.dbi.inTransaction((handle, status) ->
                 handle.createStatement(DELETE_DEFINITION_SQL).bind("id", definition.getId()).execute());
     }

@@ -22,11 +22,11 @@ public class TestDefaultValueEvaluator {
     private static final String CONTENT = readGzipResource(
             "/home/yura/websearchgui/service/TestResultEntryProcessService.html.tar.gz");
 
-    private final DefaultValueEvaluator service = new DefaultValueEvaluator();
+    private static final DefaultValueEvaluator VALUE_EVALUATOR = new DefaultValueEvaluator();
 
     @Test
     public void evaluate() throws Exception {
-        final String evaluated = this.service.evaluate(of(
+        final String evaluated = VALUE_EVALUATOR.evaluate(of(
                 // remove 1st cyrillic word
                 3, create(null, DELETE_CONTENT_PART, REG_EXP, "^(\\p{InCyrillic})+\\s+"),
                 // remove punctuation

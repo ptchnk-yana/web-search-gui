@@ -6,7 +6,7 @@ import org.skife.jdbi.v2.DBI;
 import java.util.List;
 import java.util.function.Function;
 
-import static java.util.Objects.requireNonNull;
+import static home.yura.websearchgui.util.LocalFunctions.requireNonNull;
 
 public abstract class AbstractJdbiResourceDao<T extends AbstractModel, S extends AbstractJdbiResourceDao.SqlObjectType<T>>
         extends AbstractJdbiDao<T> {
@@ -16,8 +16,8 @@ public abstract class AbstractJdbiResourceDao<T extends AbstractModel, S extends
 
     AbstractJdbiResourceDao(final DBI dbi, final Class<T> beanClass, final Class<S> sqlObjectType) {
         super(dbi);
-        this.beanClass = requireNonNull(beanClass, "beanClass cannot be null");
-        this.sqlObjectType = requireNonNull(sqlObjectType, "sqlObjectType cannot be null");
+        this.beanClass = requireNonNull(beanClass, "beanClass");
+        this.sqlObjectType = requireNonNull(sqlObjectType, "sqlObjectType");
     }
 
     @Override

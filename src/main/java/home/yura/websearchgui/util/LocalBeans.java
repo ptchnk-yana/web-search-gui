@@ -19,7 +19,7 @@ import static home.yura.websearchgui.util.LocalFunctions.process;
 import static java.beans.Introspector.getBeanInfo;
 import static java.lang.System.arraycopy;
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.util.Objects.requireNonNull;
+import static home.yura.websearchgui.util.LocalFunctions.requireNonNull;
 
 /**
  * @author yuriy.dunko on 03.03.17.
@@ -70,7 +70,7 @@ public final class LocalBeans {
     public static byte[] gzip(final String content) {
         final ByteArrayOutputStream bout = new ByteArrayOutputStream();
         try (final GZIPOutputStream output = new GZIPOutputStream(bout)) {
-            output.write(requireNonNull(content, "content cannot be null").getBytes(UTF_8));
+            output.write(requireNonNull(content, "content").getBytes(UTF_8));
         } catch (final IOException ex) {
             throw new IllegalArgumentException(ex);
         }
@@ -78,7 +78,7 @@ public final class LocalBeans {
     }
 
     public static String gunzip(final byte[] content) {
-        try (final GZIPInputStream input = new GZIPInputStream(new ByteArrayInputStream(requireNonNull(content, "content cannot be null")))) {
+        try (final GZIPInputStream input = new GZIPInputStream(new ByteArrayInputStream(requireNonNull(content, "content")))) {
             return IOUtils.toString(input, UTF_8.name());
         } catch (final IOException ex) {
             throw new IllegalArgumentException(ex);

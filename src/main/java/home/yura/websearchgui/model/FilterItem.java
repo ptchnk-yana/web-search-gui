@@ -22,24 +22,31 @@ public abstract class FilterItem implements AbstractModel {
 
     public static enum FilterPreFormatting {
         NO,
-        ESCAPE_HTML,
+        /** remove all tags from html */
+        CLEAR_HTML,
+        /**
+         * For example, replace this:
+         * https://ru.wikipedia.org/wiki/%D0%97%D0%B0%D0%B3%D0%BB%D0%B0%D0%B2%D0%BD%D0%B0%D1%8F_%D1%81%D1%82%D1%80%D0%B0%D0%BD%D0%B8%D1%86%D0%B0
+         * on this:
+         * https://ru.wikipedia.org/wiki/Заглавная_страница
+         */
         ESCAPE_URL
     }
 
-    public static FilterItem create(Integer id,
-                                    Integer filterId,
-                                    FilterLocation filterLocation,
-                                    FilterEngine filterEngine,
-                                    FilterPreFormatting filterPreFormatting,
-                                    String expression) {
+    public static FilterItem create(final Integer id,
+                                    final Integer filterId,
+                                    final FilterLocation filterLocation,
+                                    final FilterEngine filterEngine,
+                                    final FilterPreFormatting filterPreFormatting,
+                                    final String expression) {
         return new AutoValue_FilterItem(id, filterId, filterLocation, filterEngine, filterPreFormatting, expression);
     }
 
-    public FilterItem copyWithId(int id) {
+    public FilterItem copyWithId(final int id) {
         return create(id, getFilterId(), getFilterLocation(), getFilterEngine(), getFilterPreFormatting(), getExpression());
     }
 
-    public FilterItem copyWithFilterId(int filterId) {
+    public FilterItem copyWithFilterId(final int filterId) {
         return create(getId(), filterId, getFilterLocation(), getFilterEngine(), getFilterPreFormatting(), getExpression());
     }
 
