@@ -11,7 +11,7 @@ import java.util.function.Supplier;
 public class Tuple<F> implements Supplier<F> {
     private final F first;
 
-    public Tuple(F first) {
+    public Tuple(final F first) {
         this.first = first;
     }
 

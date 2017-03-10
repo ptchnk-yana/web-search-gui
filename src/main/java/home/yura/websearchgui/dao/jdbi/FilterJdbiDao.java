@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static home.yura.websearchgui.util.LocalBeans.beanToMap;
-import static java.util.Objects.requireNonNull;
+import static home.yura.websearchgui.util.LocalFunctions.requireNonNull;
 
 /**
  * @author yura on 27.02.17.
@@ -89,7 +89,7 @@ public class FilterJdbiDao extends AbstractJdbiDao<Filter> implements FilterDao 
 
     @Override
     public Filter add(final Filter filter) {
-        final Filter.Builder builder = checkNotNull(filter, "filter cannot be null").buildNew().setFilterItems(null);
+        final Filter.Builder builder = checkNotNull(filter, "filter").buildNew().setFilterItems(null);
 
         try (final Handle h = this.dbi.open()) {
             return h.inTransaction((conn, status) -> {
@@ -116,8 +116,8 @@ public class FilterJdbiDao extends AbstractJdbiDao<Filter> implements FilterDao 
 
     @Override
     public FilterItem addItem(final FilterItem item) {
-        requireNonNull(item, "item cannot be null");
-        requireNonNull(item.getFilterId(), "item.filterId cannot be null");
+        requireNonNull(item, "item");
+        requireNonNull(item.getFilterId(), "item.filterId");
         try (Handle h = this.dbi.open()) {
             return item.copyWithId(h.createStatement(INSERT_ITEM_SQL)
                     .bindFromMap(beanToMap("fi", item))
@@ -128,7 +128,7 @@ public class FilterJdbiDao extends AbstractJdbiDao<Filter> implements FilterDao 
 
     @Override
     public int delete(final Filter filter) {
-        checkNotNull(filter, "filter cannot be null");
+        checkNotNull(filter, "filter");
         try (Handle h = this.dbi.open()) {
             return h.inTransaction((conn, status) -> {
                 conn.createStatement(RESET_SEARCH_RESULT_SQL).bind("id", filter.getId()).execute();

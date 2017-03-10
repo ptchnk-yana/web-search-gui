@@ -28,7 +28,8 @@ import static java.util.stream.Collectors.toMap;
  * @author yuriy.dunko on 02.03.17.
  */
 public class AbstractJdbiTest {
-    private final static String JDBC_URL = "jdbc:h2:mem:test";
+    private static final String JDBC_URL = "jdbc:h2:mem:test";
+    private static final boolean LOG_SQL = false;
     protected final DBI dbi = new DBI(JdbcConnectionPool.create(JDBC_URL, "", "")) {
         {
             final ExecutorService printer = Executors.newSingleThreadExecutor();
@@ -40,7 +41,9 @@ public class AbstractJdbiTest {
 
                 @Override
                 protected void log(final String msg) {
-                    printer.submit(() -> System.out.println("JDBI: " + msg.replaceAll("(\\s)+", " ")));
+                    if (LOG_SQL) {
+                        printer.submit(() -> System.out.println("JDBI: " + msg.replaceAll("(\\s)+", " ")));
+                    }
                 }
             });
         }

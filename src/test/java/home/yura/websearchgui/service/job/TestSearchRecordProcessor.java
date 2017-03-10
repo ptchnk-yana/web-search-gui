@@ -11,16 +11,15 @@ import home.yura.websearchgui.service.ValueEvaluator;
 import home.yura.websearchgui.util.LocalBeans;
 import home.yura.websearchgui.util.bean.BiTuple;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
 import org.easybatch.core.record.GenericRecord;
 import org.easybatch.core.record.Header;
 import org.easybatch.core.record.Record;
 import org.junit.Test;
-import sun.security.action.GetPropertyAction;
 
 import java.io.File;
 import java.io.InputStream;
 import java.security.AccessController;
+import java.security.PrivilegedAction;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -96,7 +95,7 @@ public class TestSearchRecordProcessor {
         assertThat(list, hasItems(not(isEmptyOrNullString()), not(isEmptyOrNullString()), not(isEmptyOrNullString())));
 
         // better to verify result manually
-        final File tmpdir = new File(AccessController.doPrivileged(new GetPropertyAction("java.io.tmpdir")));
+        final File tmpdir = new File(AccessController.doPrivileged((PrivilegedAction<String>) () -> System.getProperty("java.io.tmpdir")));
         final File storage = new File(tmpdir, String.format("%s.html.gz", getClass().getSimpleName()));
         FileUtils.writeByteArrayToFile(storage, LocalBeans.gzip(list.get(0)));
         System.out.printf("%s.processRecord -> %s", getClass().getSimpleName(), storage).println();

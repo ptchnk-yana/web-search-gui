@@ -24,9 +24,14 @@ public abstract class SearchResult implements AbstractNamedModel {
                 ObjectUtils.firstNonNull(viewed, false));
     }
 
-    public static SearchResult copyWithId(final int id, final SearchResult sr) {
-        return create(id, sr.getName(), sr.getDescription(), sr.getResultEntryDefinitionId(),
-                sr.getFilterItemId(), sr.getInternalId(), sr.getUrl(), sr.isViewed());
+    public SearchResult copyWithId(final int id) {
+        return create(id, getName(), getDescription(), getResultEntryDefinitionId(), getFilterItemId(), getInternalId(),
+                getUrl(), isViewed());
+    }
+
+    public SearchResult copyWithFilterItemId(final int filterItemId) {
+        return create(getId(), getName(), getDescription(), getResultEntryDefinitionId(), filterItemId, getInternalId(),
+                getUrl(), isViewed());
     }
 
     public abstract Integer getResultEntryDefinitionId();

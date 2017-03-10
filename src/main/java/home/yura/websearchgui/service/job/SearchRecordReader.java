@@ -28,7 +28,7 @@ import static com.google.common.base.Strings.nullToEmpty;
 import static com.google.common.collect.Iterables.getFirst;
 import static home.yura.websearchgui.util.LocalBeans.extractLong;
 import static java.lang.String.format;
-import static java.util.Objects.requireNonNull;
+import static home.yura.websearchgui.util.LocalFunctions.requireNonNull;
 import static java.util.stream.Collectors.toList;
 
 /**
@@ -74,13 +74,13 @@ public class SearchRecordReader implements RecordReader {
                               final Long finalInternalId,
                               final int readLimit,
                               final BiTuple<Search, ResultEntryDefinition> searchTuple) {
-        requireNonNull(searchTuple, "searchTuple cannot be null");
-        this.search = requireNonNull(searchTuple.getFirst(), "search cannot be null");
-        this.resultEntryDefinition = requireNonNull(searchTuple.getSecond(), "resultEntryDefinition cannot be null");
+        requireNonNull(searchTuple, "searchTuple");
+        this.search = requireNonNull(searchTuple.getFirst(), "search");
+        this.resultEntryDefinition = requireNonNull(searchTuple.getSecond(), "resultEntryDefinition");
         this.finalInternalId = finalInternalId; // can be null if this job has never run before.
         this.readLimit = readLimit;
-        this.valueEvaluator = requireNonNull(valueEvaluator, "valueEvaluator cannot be null");
-        this.httpClientSupplier = requireNonNull(httpClientSupplier, "httpClientSupplier cannot be null");
+        this.valueEvaluator = requireNonNull(valueEvaluator, "valueEvaluator");
+        this.httpClientSupplier = requireNonNull(httpClientSupplier, "httpClientSupplier");
     }
 
     @Override

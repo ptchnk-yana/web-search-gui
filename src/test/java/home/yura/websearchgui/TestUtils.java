@@ -1,5 +1,7 @@
 package home.yura.websearchgui;
 
+import home.yura.websearchgui.dao.AbstractDao;
+import home.yura.websearchgui.model.AbstractModel;
 import home.yura.websearchgui.util.LocalHttpUtils;
 import org.apache.commons.lang3.RandomUtils;
 import org.apache.http.HttpEntity;
@@ -11,6 +13,7 @@ import org.apache.http.protocol.BasicHttpContext;
 import org.apache.http.protocol.HttpContext;
 
 import java.io.InputStream;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.UUID;
 import java.util.function.Supplier;
@@ -19,6 +22,7 @@ import static home.yura.websearchgui.util.LocalBeans.gunzip;
 import static home.yura.websearchgui.util.LocalFunctions.process;
 import static org.apache.commons.io.IOUtils.toByteArray;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -65,5 +69,13 @@ public class TestUtils {
             return response;
         });
         return httpClient;
+    }
+
+    @SafeVarargs
+    public static <T extends AbstractModel, D extends AbstractDao<T>> D createDao(final Class<D> daoClass, final T... array) {
+        final D daoMock = mock(daoClass);
+        when(daoMock.list()).thenReturn(Arrays.asList(array));
+        when(daoMock.get(anyInt())).thenAnswer(invocation -> array[invocation.<Integer>getArgument(0)]);
+        return daoMock;
     }
 }

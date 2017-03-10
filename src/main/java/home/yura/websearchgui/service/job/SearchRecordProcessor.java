@@ -17,12 +17,15 @@ import java.util.concurrent.Future;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-import static java.util.Objects.requireNonNull;
+import static home.yura.websearchgui.util.LocalFunctions.requireNonNull;
 
 /**
  * @author yuriy.dunko on 09.03.17.
  */
-public class SearchRecordProcessor implements RecordProcessor<Record<List<SearchResult>>, Record<List<Future<BiTuple<SearchResult, SearchResultContent>>>>> {
+public class SearchRecordProcessor implements
+        RecordProcessor<
+                Record<List<SearchResult>>,
+                Record<List<Future<BiTuple<SearchResult, SearchResultContent>>>>> {
 
     private final ExecutorService poolExecutor;
     private final ValueEvaluator valueEvaluator;
@@ -33,11 +36,11 @@ public class SearchRecordProcessor implements RecordProcessor<Record<List<Search
                                  final ValueEvaluator valueEvaluator,
                                  final Supplier<CloseableHttpClient> httpClientSupplier,
                                  final ResultEntryDefinition resultEntryDefinition) {
-        this.poolExecutor = requireNonNull(poolExecutor, "poolExecutor cannot be null");
+        this.poolExecutor = requireNonNull(poolExecutor, "poolExecutor");
         this.valueEvaluator = requireNonNull(valueEvaluator, "");
-        this.client = requireNonNull(requireNonNull(httpClientSupplier, "httpClientSupplier cannot be null").get(),
-                "httpClient cannot be null");
-        this.resultEntryDefinition = requireNonNull(resultEntryDefinition, "resultEntryDefinition cannot be null");
+        this.client = requireNonNull(requireNonNull(httpClientSupplier, "httpClientSupplier").get(),
+                "httpClient");
+        this.resultEntryDefinition = requireNonNull(resultEntryDefinition, "resultEntryDefinition");
     }
 
     @Override

@@ -19,6 +19,10 @@ public class BiTuple<F, S> extends Tuple<F> {
         return this.second;
     }
 
+    public BiTuple<F, S> copyWithFirst(final F first) {
+        return new BiTuple<F, S>(first, this.second);
+    }
+
     @Override
     public boolean equals(final Object o) {
         if (this == o) {

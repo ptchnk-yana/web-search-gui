@@ -15,8 +15,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 
-import static home.yura.websearchgui.model.SearchResult.copyWithId;
-import static java.util.Objects.requireNonNull;
+import static home.yura.websearchgui.util.LocalFunctions.requireNonNull;
 
 /**
  * @author yuriy.dunko on 02.03.17.
@@ -29,7 +28,7 @@ public class SearchResultJdbiResourceDao extends AbstractJdbiResourceDao<SearchR
 
     @Override
     public SearchResult add(final SearchResult searchResult) {
-        return super.handle(r -> copyWithId(r.insert(requireNonNull(searchResult, "searchResult cannot be null")), searchResult));
+        return super.handle(r -> searchResult.copyWithId(r.insert(requireNonNull(searchResult, "searchResult"))));
     }
 
     @Override
