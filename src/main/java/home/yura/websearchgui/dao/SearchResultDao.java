@@ -3,6 +3,7 @@ package home.yura.websearchgui.dao;
 import home.yura.websearchgui.model.SearchResult;
 
 import javax.annotation.Nullable;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -10,7 +11,11 @@ import java.util.List;
  */
 public interface SearchResultDao extends AbstractDao<SearchResult> {
 
-    void setViewed(int id, boolean viewed);
+    int BATCH_SIZE = 50;
 
-    List<SearchResult> findByFilterId(@Nullable Integer filterId);
+    void setViewed(final int id, final boolean viewed);
+
+    List<SearchResult> findByFilterId(@Nullable final Integer filterId);
+
+    int[] addBatch(final Collection<SearchResult> batch);
 }

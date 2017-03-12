@@ -125,17 +125,6 @@ public class AbstractJdbiTest {
                 list.get(3));
     }
 
-    static SearchResult randomSearchResult(final Integer resultEntryDefinitionId, final Integer filterItemId) {
-        return SearchResult.create(null,
-                TestUtils.randomString(),
-                TestUtils.randomString(),
-                resultEntryDefinitionId,
-                filterItemId,
-                TestUtils.randomLong(),
-                TestUtils.randomString(),
-                false);
-    }
-
     static Filter randomFilter(final Integer searchId, final int... itemCount) {
         final Filter.Builder builder = Filter.builder()
                 .setName(TestUtils.randomString())

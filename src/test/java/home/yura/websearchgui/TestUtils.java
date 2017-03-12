@@ -2,6 +2,7 @@ package home.yura.websearchgui;
 
 import home.yura.websearchgui.dao.AbstractDao;
 import home.yura.websearchgui.model.AbstractModel;
+import home.yura.websearchgui.model.SearchResult;
 import home.yura.websearchgui.util.LocalHttpUtils;
 import org.apache.commons.lang3.RandomUtils;
 import org.apache.http.HttpEntity;
@@ -77,5 +78,16 @@ public class TestUtils {
         when(daoMock.list()).thenReturn(Arrays.asList(array));
         when(daoMock.get(anyInt())).thenAnswer(invocation -> array[invocation.<Integer>getArgument(0)]);
         return daoMock;
+    }
+
+    public static SearchResult randomSearchResult(final Integer resultEntryDefinitionId, final Integer filterItemId) {
+        return SearchResult.create(null,
+                randomString(),
+                randomString(),
+                resultEntryDefinitionId,
+                filterItemId,
+                randomLong(),
+                randomString(),
+                false);
     }
 }

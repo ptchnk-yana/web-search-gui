@@ -1,5 +1,6 @@
 package home.yura.websearchgui.dao.jdbi;
 
+import home.yura.websearchgui.TestUtils;
 import home.yura.websearchgui.model.Filter;
 import home.yura.websearchgui.model.FilterItem;
 import home.yura.websearchgui.model.ResultEntryDefinition;
@@ -76,7 +77,7 @@ public class TestFilterJdbiDao extends AbstractJdbiTest {
         final Filter filter = this.filterDao.add(randomFilter(search.getId()));
         final Integer filterItemId = filter.getFilterItems().get(0).getId();
         final ResultEntryDefinition resultDefinition = this.resultEntryDefinitionDao.add(randomResultDefinition(search.getId()));
-        this.searchResultDao.add(randomSearchResult(resultDefinition.getSearchId(), filterItemId));
+        this.searchResultDao.add(TestUtils.randomSearchResult(resultDefinition.getSearchId(), filterItemId));
 
         int deleteNumber = this.filterDao.delete(filter);
         assertThat(deleteNumber, is(1));
