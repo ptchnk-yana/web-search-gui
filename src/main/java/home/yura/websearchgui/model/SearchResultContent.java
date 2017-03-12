@@ -16,7 +16,7 @@ public abstract class SearchResultContent implements AbstractModel {
         return new AutoValue_SearchResultContent(searchResultId, content);
     }
 
-    public SearchResultContent copyWithSearchResultId(int id) {
+    public SearchResultContent copyWithSearchResultId(final int id) {
         return create(id, this.getContent());
     }
 

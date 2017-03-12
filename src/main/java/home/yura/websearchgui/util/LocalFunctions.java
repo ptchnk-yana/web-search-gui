@@ -2,6 +2,8 @@ package home.yura.websearchgui.util;
 
 import java.util.Objects;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -29,6 +31,14 @@ public final class LocalFunctions {
             return call.call();
         } catch (final Exception e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    public static <T> T getFromFuture(final Future<T> future) {
+        try {
+            return future.get();
+        } catch (InterruptedException | ExecutionException e) {
+            throw new IllegalStateException(e);
         }
     }
 

@@ -8,11 +8,14 @@ import home.yura.websearchgui.util.LocalJdbis;
 import org.skife.jdbi.v2.DBI;
 import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.sqlobject.*;
+import org.skife.jdbi.v2.sqlobject.customizers.BatchChunkSize;
 import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 
 import static home.yura.websearchgui.util.LocalFunctions.requireNonNull;
@@ -20,9 +23,10 @@ import static home.yura.websearchgui.util.LocalFunctions.requireNonNull;
 /**
  * @author yuriy.dunko on 02.03.17.
  */
-public class SearchResultJdbiResourceDao extends AbstractJdbiResourceDao<SearchResult, SearchResultJdbiResource> implements SearchResultDao {
+public class SearchResultJdbiResourceDao extends AbstractJdbiResourceDao<SearchResult, SearchResultJdbiResource>
+        implements SearchResultDao {
 
-    protected SearchResultJdbiResourceDao(final DBI dbi) {
+    public SearchResultJdbiResourceDao(final DBI dbi) {
         super(dbi, SearchResult.class, SearchResultJdbiResource.class);
     }
 
@@ -46,6 +50,11 @@ public class SearchResultJdbiResourceDao extends AbstractJdbiResourceDao<SearchR
         return super.handle(r -> r.findByFilterId(filterId));
     }
 
+    @Override
+    public int[] addBatch(final Collection<SearchResult> batch) {
+        return super.handle(r -> r.insertAll(requireNonNull(batch, "batch")));
+    }
+
     @RegisterMapper(SearchResultJdbiMapper.class)
     public static interface SearchResultJdbiResource extends AbstractJdbiResourceDao.SqlObjectType<SearchResult> {
 
@@ -58,6 +67,14 @@ public class SearchResultJdbiResourceDao extends AbstractJdbiResourceDao<SearchR
                 "   :s.name, :s.description, :s.resultEntryDefinitionId, :s.filterItemId, :s.internalId, :s.url, :s.viewed)  ")
         @GetGeneratedKeys
         int insert(@BindBean("s") SearchResult s);
+
+        @SqlBatch("INSERT INTO search_result (" +
+                "name, description, result_entry_definition_id, filter_item_id, internal_id, url, viewed" +
+                ") VALUES (" +
+                ":s.name, :s.description, :s.resultEntryDefinitionId, :s.filterItemId, :s.internalId, :s.url, :s.viewed)")
+        @BatchChunkSize(BATCH_SIZE)
+        @GetGeneratedKeys
+        int[] insertAll(@BindBean("s") Collection<SearchResult> s);
 
         @SqlUpdate("DELETE FROM search_result WHERE id = :id")
         int delete(@Bind("id") int id);
