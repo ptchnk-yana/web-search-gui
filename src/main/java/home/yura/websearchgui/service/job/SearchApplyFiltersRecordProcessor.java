@@ -58,6 +58,7 @@ public class SearchApplyFiltersRecordProcessor implements
                         .map(futureTuple -> {
                             final BiTuple<SearchResult, SearchResultContent> tuple = process(futureTuple::get);
                             return Optional
+                                    // TODO: chose a filter id by most matches
                                     .ofNullable(this.filterMatcher.getMatchedItemId(filter, document(documentCache, tuple)))
                                     .map(fItemId -> tuple.copyWithFirst(tuple.getFirst().copyWithFilterItemId(fItemId)));
                         }).filter(Optional::isPresent)

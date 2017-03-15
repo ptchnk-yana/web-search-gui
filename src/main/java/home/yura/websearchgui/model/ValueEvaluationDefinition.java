@@ -29,6 +29,12 @@ public abstract class ValueEvaluationDefinition implements AbstractModel {
         CSS_QUERY_SEARCH
     }
 
+    public static ValueEvaluationDefinition create(final ValueEvaluationDefinitionType evaluationDefinitionType,
+                                                   final ValueEvaluationDefinitionEngine valueEvaluationDefinitionEngine,
+                                                   final String expression) {
+        return create(null, evaluationDefinitionType, valueEvaluationDefinitionEngine, expression);
+    }
+
     public static ValueEvaluationDefinition create(final Integer id,
                                                    final ValueEvaluationDefinitionType evaluationDefinitionType,
                                                    final ValueEvaluationDefinitionEngine valueEvaluationDefinitionEngine,

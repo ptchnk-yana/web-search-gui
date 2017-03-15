@@ -47,9 +47,9 @@ public class TestSearchRecordReader {
     private static final String PAGE_3_LOCATION = "/home/yura/websearchgui/service/job/search/page3.html.tar.gz";
 
     private static final Map<String, Supplier<InputStream>> CONTENT_MAP = ImmutableMap.of(
-            PAGE_1_URL, () -> process(() -> new GZIPInputStream(getResourceAsStream(PAGE_1_LOCATION)), RuntimeException::new),
-            PAGE_2_URL, () -> process(() -> new GZIPInputStream(getResourceAsStream(PAGE_2_LOCATION)), RuntimeException::new),
-            PAGE_3_URL, () -> process(() -> new GZIPInputStream(getResourceAsStream(PAGE_3_LOCATION)), RuntimeException::new)
+            PAGE_1_URL, () -> process(() -> new GZIPInputStream(getResourceAsStream(PAGE_1_LOCATION))),
+            PAGE_2_URL, () -> process(() -> new GZIPInputStream(getResourceAsStream(PAGE_2_LOCATION))),
+            PAGE_3_URL, () -> process(() -> new GZIPInputStream(getResourceAsStream(PAGE_3_LOCATION)))
     );
 
     private static final ValueEvaluator VALUE_EVALUATOR = new DefaultValueEvaluator();

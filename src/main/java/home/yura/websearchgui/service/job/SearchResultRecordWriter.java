@@ -12,6 +12,7 @@ import org.easybatch.core.record.Record;
 import org.easybatch.core.writer.RecordWriter;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Future;
@@ -67,6 +68,7 @@ public class SearchResultRecordWriter implements RecordWriter {
                     .getPayload()
                     .stream()
                     .map(LocalFunctions::getFromFuture)
+                    .sorted(Comparator.comparingLong(o -> o.getFirst().getInternalId()))
                     .collect(toList());
             this.saveSearchResultContentFunction.ifPresent(f -> savedFutures.add(f.apply(request)));
             this.saveSearchResultFunction.apply(request.stream().map(Tuple::getFirst).collect(toList()));

@@ -11,7 +11,7 @@ import java.util.List;
  */
 public interface SearchResultDao extends AbstractDao<SearchResult> {
 
-    int BATCH_SIZE = 50;
+    int BATCH_SIZE = 10;
 
     void setViewed(final int id, final boolean viewed);
 

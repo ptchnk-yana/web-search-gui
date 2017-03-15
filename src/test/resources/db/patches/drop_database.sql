@@ -6,3 +6,4 @@ DROP TABLE result_entry_definition;
 DROP TABLE value_evaluation_in_result_entry_mapping;
 DROP TABLE value_evaluation_in_search_mapping;
 DROP TABLE search;
+DROP TABLE local_job;
