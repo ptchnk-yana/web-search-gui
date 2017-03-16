@@ -7,8 +7,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
-import static com.google.common.base.Preconditions.*;
-import static com.google.common.collect.ImmutableMap.copyOf;
+import static java.util.Collections.unmodifiableMap;
+import static com.google.common.base.Preconditions.checkArgument;
 import static org.apache.commons.lang3.ObjectUtils.firstNonNull;
 
 /**
@@ -25,10 +25,10 @@ public abstract class ResultEntryDefinition implements AbstractModel {
                                                final Map<Integer, ValueEvaluationDefinition> internalIdExtractionChain,
                                                final Map<Integer, ValueEvaluationDefinition> contentExtractionChain) {
         return new AutoValue_ResultEntryDefinition(id, searchId, entryBlockLocation,
-                copyOf(firstNonNull(nameExtractionChain, new HashMap<>())),
-                copyOf(firstNonNull(contentLinkExtractionChain, new HashMap<>())),
-                copyOf(firstNonNull(internalIdExtractionChain, new HashMap<>())),
-                copyOf(firstNonNull(contentExtractionChain, new HashMap<>())));
+                unmodifiableMap(firstNonNull(nameExtractionChain, new HashMap<>())),
+                unmodifiableMap(firstNonNull(contentLinkExtractionChain, new HashMap<>())),
+                unmodifiableMap(firstNonNull(internalIdExtractionChain, new HashMap<>())),
+                unmodifiableMap(firstNonNull(contentExtractionChain, new HashMap<>())));
     }
 
     public static ResultEntryDefinition merge(final ResultEntryDefinition left, final ResultEntryDefinition right) {

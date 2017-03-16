@@ -4,9 +4,11 @@ import javax.annotation.Nullable;
 import java.io.Serializable;
 
 /**
- * Created by yura on 26.02.17.
+ * @author yuriy.dunko on 26.02.17.
  */
 public interface AbstractModel extends Serializable {
+
+    long NULL_SIMPLE_VALUE = 0L;
 
     @Nullable
     Integer getId();

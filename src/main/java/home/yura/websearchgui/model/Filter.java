@@ -4,13 +4,12 @@ import com.google.auto.value.AutoValue;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.collect.ImmutableList.copyOf;
-import static com.google.common.collect.ImmutableList.of;
+import static home.yura.websearchgui.util.LocalFunctions.requireNonNull;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.unmodifiableList;
 import static org.apache.commons.lang3.ObjectUtils.firstNonNull;
 
 /**
@@ -25,7 +24,7 @@ public abstract class Filter implements AbstractNamedModel {
 
     public Builder buildNew() {
         return new AutoValue_Filter.Builder(this)
-                .setFilterItems(new ArrayList<>(Optional.ofNullable(getFilterItems()).orElse(Collections.emptyList())));
+                .setFilterItems(new ArrayList<>(Optional.ofNullable(getFilterItems()).orElse(emptyList())));
     }
 
     public abstract Integer getSearchId();
@@ -52,14 +51,14 @@ public abstract class Filter implements AbstractNamedModel {
             if (items == null) {
                 setFilterItems(items = new ArrayList<>());
             }
-            items.add(checkNotNull(filterItem, "item"));
+            items.add(requireNonNull(filterItem, "item"));
             return this;
         }
 
         public Filter build() {
             final Filter source = buildInternal();
             return new AutoValue_Filter.Builder(source)
-                    .setFilterItems(copyOf(firstNonNull(source.getFilterItems(), of())))
+                    .setFilterItems(unmodifiableList(firstNonNull(source.getFilterItems(), emptyList())))
                     .buildInternal();
         }
 

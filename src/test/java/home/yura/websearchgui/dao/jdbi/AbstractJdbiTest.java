@@ -28,22 +28,21 @@ import static java.util.stream.Collectors.toMap;
  * @author yuriy.dunko on 02.03.17.
  */
 public class AbstractJdbiTest {
+    private static final ExecutorService PRINTER = Executors.newSingleThreadExecutor();
     private static final String JDBC_URL = "jdbc:h2:mem:test";
     private static final boolean LOG_SQL = false;
+
     protected final DBI dbi = new DBI(JdbcConnectionPool.create(JDBC_URL, "", "")) {
         {
-            final ExecutorService printer = Executors.newSingleThreadExecutor();
             setSQLLog(new FormattedLog() {
                 @Override
                 protected boolean isEnabled() {
-                    return true;
+                    return LOG_SQL;
                 }
 
                 @Override
                 protected void log(final String msg) {
-                    if (LOG_SQL) {
-                        printer.submit(() -> System.out.println("JDBI: " + msg.replaceAll("(\\s)+", " ")));
-                    }
+                    PRINTER.submit(() -> System.out.println("JDBI: " + msg.replaceAll("(\\s)+", " ")));
                 }
             });
         }
@@ -51,11 +50,11 @@ public class AbstractJdbiTest {
     protected ResultEntryDefinitionJdbiDao resultEntryDefinitionDao = new ResultEntryDefinitionJdbiDao(this.dbi);
     protected SearchJdbiDao searchDao = new SearchJdbiDao(this.dbi);
     protected FilterJdbiDao filterDao = new FilterJdbiDao(this.dbi);
+    protected final LocalJobJdbiDao localJobJdbiDao = new LocalJobJdbiDao(this.dbi);
     protected SearchResultJdbiResourceDao searchResultDao = new SearchResultJdbiResourceDao(this.dbi);
 
     @BeforeClass
     public static void setupTestClass() throws IOException {
-//        teardownTestClass();
         try (InputStream is = AbstractJdbiTest.class.getResourceAsStream("/db/patches/create_database.sql")) {
             new DBI(JdbcConnectionPool.create(JDBC_URL, "", ""))
                     .inTransaction((conn, status) -> conn.createStatement(IOUtils.toString(is)).execute());
@@ -104,7 +103,7 @@ public class AbstractJdbiTest {
         final int[] processorsCount = new int[]{1, 1, 1, 1};
         arraycopy(processorsCountInput, 0, processorsCount, 0, processorsCountInput.length);
 
-        List<Map<Integer, ValueEvaluationDefinition>> list = Arrays
+        final List<Map<Integer, ValueEvaluationDefinition>> list = Arrays
                 .stream(processorsCount)
                 .mapToObj(value -> IntStream.range(1, value + 1)
                         .boxed()

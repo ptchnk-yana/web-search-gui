@@ -44,6 +44,10 @@ public class TestUtils {
         return RandomUtils.nextLong();
     }
 
+    public static int randomInt() {
+        return RandomUtils.nextInt();
+    }
+
     public static String randomString() {
         return UUID.randomUUID().toString();
     }

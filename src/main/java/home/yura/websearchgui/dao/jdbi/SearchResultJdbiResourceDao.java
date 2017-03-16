@@ -14,7 +14,6 @@ import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
@@ -68,6 +67,7 @@ public class SearchResultJdbiResourceDao extends AbstractJdbiResourceDao<SearchR
         @GetGeneratedKeys
         int insert(@BindBean("s") SearchResult s);
 
+        // TODO: insert from select
         @SqlBatch("INSERT INTO search_result (" +
                 "name, description, result_entry_definition_id, filter_item_id, internal_id, url, viewed" +
                 ") VALUES (" +
@@ -111,6 +111,7 @@ public class SearchResultJdbiResourceDao extends AbstractJdbiResourceDao<SearchR
             return SearchResult.create(
                     r.getInt("id"),
                     r.getString("name"),
+                    // TODO: SMART encrypt/decrypt description as it CAN be very big
                     r.getString("description"),
                     r.getInt("result_entry_definition_id"),
                     LocalJdbis.extractIntValue(r, "filter_item_id", null),

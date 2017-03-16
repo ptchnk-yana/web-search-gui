@@ -3,6 +3,7 @@ package home.yura.websearchgui.dao.jdbi;
 import home.yura.websearchgui.dao.FilterDao;
 import home.yura.websearchgui.model.Filter;
 import home.yura.websearchgui.model.FilterItem;
+import home.yura.websearchgui.util.LocalFunctions;
 import home.yura.websearchgui.util.LocalJdbis;
 import org.skife.jdbi.v2.DBI;
 import org.skife.jdbi.v2.Handle;
@@ -16,7 +17,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import static com.google.common.base.Preconditions.checkNotNull;
 import static home.yura.websearchgui.util.LocalBeans.beanToMap;
 import static home.yura.websearchgui.util.LocalFunctions.requireNonNull;
 
@@ -89,7 +89,7 @@ public class FilterJdbiDao extends AbstractJdbiDao<Filter> implements FilterDao 
 
     @Override
     public Filter add(final Filter filter) {
-        final Filter.Builder builder = checkNotNull(filter, "filter").buildNew().setFilterItems(null);
+        final Filter.Builder builder = requireNonNull(filter, "filter").buildNew().setFilterItems(null);
 
         try (final Handle h = this.dbi.open()) {
             return h.inTransaction((conn, status) -> {
@@ -128,7 +128,7 @@ public class FilterJdbiDao extends AbstractJdbiDao<Filter> implements FilterDao 
 
     @Override
     public int delete(final Filter filter) {
-        checkNotNull(filter, "filter");
+        requireNonNull(filter, "filter");
         try (Handle h = this.dbi.open()) {
             return h.inTransaction((conn, status) -> {
                 conn.createStatement(RESET_SEARCH_RESULT_SQL).bind("id", filter.getId()).execute();

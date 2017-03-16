@@ -122,4 +122,13 @@ public final class LocalJdbis {
         }
         return defaultValue;
     }
+
+    public static Long extractLongValue(final ResultSet r, final String label, @Nullable final Long defaultValue)
+            throws SQLException {
+        final Object userIdObject = r.getObject(label);
+        if (!r.wasNull() && userIdObject != null) {
+            return ((Number) userIdObject).longValue();
+        }
+        return defaultValue;
+    }
 }
