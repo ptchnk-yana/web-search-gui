@@ -3,6 +3,8 @@ package home.yura.websearchgui.dao.jdbi;
 import home.yura.websearchgui.TestUtils;
 import home.yura.websearchgui.model.*;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.h2.jdbcx.JdbcConnectionPool;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -15,8 +17,6 @@ import java.io.InputStream;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.stream.IntStream;
 
 import static java.lang.System.arraycopy;
@@ -28,21 +28,20 @@ import static java.util.stream.Collectors.toMap;
  * @author yuriy.dunko on 02.03.17.
  */
 public class AbstractJdbiTest {
-    private static final ExecutorService PRINTER = Executors.newSingleThreadExecutor();
     private static final String JDBC_URL = "jdbc:h2:mem:test";
-    private static final boolean LOG_SQL = false;
+    protected final Log log = LogFactory.getLog(DBI.class);
 
     protected final DBI dbi = new DBI(JdbcConnectionPool.create(JDBC_URL, "", "")) {
         {
             setSQLLog(new FormattedLog() {
                 @Override
                 protected boolean isEnabled() {
-                    return LOG_SQL;
+                    return log.isTraceEnabled();
                 }
 
                 @Override
                 protected void log(final String msg) {
-                    PRINTER.submit(() -> System.out.println("JDBI: " + msg.replaceAll("(\\s)+", " ")));
+                    log.trace(msg.replaceAll("(\\s)+", " "));
                 }
             });
         }
@@ -76,7 +75,7 @@ public class AbstractJdbiTest {
         }
     }
 
-    static Search randomSearch(final int... processorsCountInput) {
+    public static Search randomSearch(final int... processorsCountInput) {
         final int[] processorsCount = new int[]{1, 1};
         arraycopy(processorsCountInput, 0, processorsCount, 0, processorsCountInput.length);
 
@@ -99,7 +98,7 @@ public class AbstractJdbiTest {
                 list.get(1));
     }
 
-    static ResultEntryDefinition randomResultDefinition(final Integer searchId, final int... processorsCountInput) {
+    public static ResultEntryDefinition randomResultDefinition(final Integer searchId, final int... processorsCountInput) {
         final int[] processorsCount = new int[]{1, 1, 1, 1};
         arraycopy(processorsCountInput, 0, processorsCount, 0, processorsCountInput.length);
 

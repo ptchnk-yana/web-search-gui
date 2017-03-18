@@ -10,6 +10,8 @@ import home.yura.websearchgui.model.FilterItem.FilterEngine;
 import home.yura.websearchgui.model.FilterItem.FilterLocation;
 import home.yura.websearchgui.model.FilterItem.FilterPreFormatting;
 import home.yura.websearchgui.util.bean.ThreeTuple;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 
@@ -34,6 +36,7 @@ import static home.yura.websearchgui.util.LocalFunctions.requireNonNull;
  * @author yuriy.dunko on 10.03.17.
  */
 public class DefaultFilterMatcher implements FilterMatcher {
+    private static final Log LOG = LogFactory.getLog(DefaultFilterMatcher.class);
     private static final MatcherFactory MATCHER_FACTORY = new MatcherFactory();
 
     // TODO: Should be configured for this class and not in it (use same cache here and in DefaultValueEvaluator)
@@ -49,6 +52,8 @@ public class DefaultFilterMatcher implements FilterMatcher {
 
     @Override
     public Integer getMatchedItemId(final Filter filter, final Document document) {
+        LOG.debug("Check matching [" + filter + "] for uri [" + document.baseUri() + "]");
+        LOG.trace("Check matching [" + filter + "] for document [" + document + "]");
         return requireNonNull(requireNonNull(filter, "filter").getFilterItems())
                 .stream()
                 .filter(item -> isMatching(item, document))

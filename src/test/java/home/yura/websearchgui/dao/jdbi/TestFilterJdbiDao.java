@@ -55,7 +55,7 @@ public class TestFilterJdbiDao extends AbstractJdbiTest {
         assertThat(filterItem, notNullValue());
         assertThat(filterItem.getId(), notNullValue());
 
-        Filter actual = this.filterDao.get(initial.getId());
+        final Filter actual = this.filterDao.get(initial.getId());
         assertThat(initial.getFilterItems(), not(hasItems(filterItem)));
         assertThat(actual.getFilterItems(), hasItems(filterItem));
     }
@@ -81,7 +81,7 @@ public class TestFilterJdbiDao extends AbstractJdbiTest {
 
         int deleteNumber = this.filterDao.delete(filter);
         assertThat(deleteNumber, is(1));
-        assertThat(this.searchResultDao.findByFilterId(filterItemId), is(empty()));
+        assertThat(this.searchResultDao.findByFilterId(filterItemId, null, Integer.MAX_VALUE), is(empty()));
 
         deleteNumber = this.filterDao.delete(filter);
         assertThat(deleteNumber, is(0));

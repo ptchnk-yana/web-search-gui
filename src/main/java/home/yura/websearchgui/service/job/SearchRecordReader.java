@@ -6,6 +6,9 @@ import home.yura.websearchgui.model.SearchResult;
 import home.yura.websearchgui.service.ValueEvaluator;
 import home.yura.websearchgui.util.LocalHttpUtils;
 import home.yura.websearchgui.util.bean.BiTuple;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.easybatch.core.reader.RecordReader;
 import org.easybatch.core.record.GenericRecord;
@@ -35,6 +38,7 @@ import static java.util.stream.Collectors.toList;
  * @author yuriy.dunko on 04.03.17.
  */
 public class SearchRecordReader implements RecordReader {
+    private static final Log LOG = LogFactory.getLog(SearchRecordReader.class);
 
     // services
 
@@ -85,6 +89,7 @@ public class SearchRecordReader implements RecordReader {
 
     @Override
     public void open() throws Exception {
+        LOG.info("Opening reader");
         this.client = httpClientSupplier.get();//HttpClientBuilder.create().build();
         this.lastInternalId = new AtomicLong();
         this.readAmount = new AtomicInteger();
@@ -93,6 +98,7 @@ public class SearchRecordReader implements RecordReader {
 
     @Override
     public Record<List<SearchResult>> readRecord() throws Exception {
+        LOG.info("Preparing to read next record");
         if (this.nextUrlLink == null
                 || (this.finalInternalId != null && this.lastInternalId.get() >= this.finalInternalId)
                 || this.readLimit <= this.readAmount.get()) {
@@ -106,6 +112,8 @@ public class SearchRecordReader implements RecordReader {
                 .map(this::buildSearchResult)
                 .sorted(Comparator.comparingLong(SearchResult::getInternalId))
                 .collect(toList());
+        LOG.info("Read [" + entryBlocks.size() + "] blocks from [" + document.baseUri() + "] and converted it to ["
+                + searchResults.size() + "]");
 
         this.nextUrlLink = evaluateNextUrlLinkValue(document);
 
@@ -131,6 +139,7 @@ public class SearchRecordReader implements RecordReader {
 
     @Override
     public void close() throws Exception {
+        LOG.info("Closing reader");
         this.client.close();
     }
 
@@ -144,7 +153,10 @@ public class SearchRecordReader implements RecordReader {
     }
 
     private String evaluateNextUrlLinkValue(final Document document) {
-        return emptyToNull(nullToEmpty(this.valueEvaluator.evaluate(this.search.getNextLinkLocation(), document)).trim());
+        final String newNextUrlLing = emptyToNull(nullToEmpty(this.valueEvaluator.evaluate(
+                this.search.getNextLinkLocation(), document)).trim());
+        checkState(!StringUtils.equals(this.nextUrlLink, newNextUrlLing), "Cycling was detected on " + newNextUrlLing);
+        return newNextUrlLing;
     }
 
     private SearchResult buildSearchResult(final Element element) {

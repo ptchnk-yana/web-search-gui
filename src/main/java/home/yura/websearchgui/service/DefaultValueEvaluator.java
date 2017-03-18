@@ -7,6 +7,8 @@ import com.google.common.collect.ImmutableMap;
 import home.yura.websearchgui.model.ValueEvaluationDefinition;
 import home.yura.websearchgui.model.ValueEvaluationDefinition.ValueEvaluationDefinitionEngine;
 import home.yura.websearchgui.util.bean.BiTuple;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -16,20 +18,18 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static com.google.common.base.Preconditions.checkState;
 import static home.yura.websearchgui.model.ValueEvaluationDefinition.ValueEvaluationDefinitionEngine.CSS_QUERY_SEARCH;
 import static home.yura.websearchgui.model.ValueEvaluationDefinition.ValueEvaluationDefinitionEngine.REG_EXP;
 import static home.yura.websearchgui.model.ValueEvaluationDefinition.ValueEvaluationDefinitionType.DELETE_CONTENT_PART;
 import static home.yura.websearchgui.model.ValueEvaluationDefinition.ValueEvaluationDefinitionType.EXTRACT_CONTENT;
 import static home.yura.websearchgui.util.LocalFunctions.findFirstGroup;
+import static home.yura.websearchgui.util.LocalFunctions.requireNonNull;
 import static java.lang.String.format;
 import static java.util.Map.Entry;
 import static java.util.Map.Entry.comparingByKey;
-import static home.yura.websearchgui.util.LocalFunctions.requireNonNull;
-import static java.util.stream.Collectors.*;
+import static java.util.stream.Collectors.joining;
 
 /**
  * Default implementation of {@link ValueEvaluator}
@@ -37,6 +37,7 @@ import static java.util.stream.Collectors.*;
  * @author yuriy.dunko on 04.03.17.
  */
 public class DefaultValueEvaluator implements ValueEvaluator {
+    private static final Log LOG = LogFactory.getLog(DefaultValueEvaluator.class);
     private static final EvaluatorFactory EVALUATORS_FACTORY = new EvaluatorFactory();
 
     // TODO: Should be configured for this class and not in it (use same cache here and in DefaultFilterMatcher)
@@ -52,6 +53,8 @@ public class DefaultValueEvaluator implements ValueEvaluator {
 
     @Override
     public String evaluate(final Map<Integer, ValueEvaluationDefinition> definitionChain, final Element document) {
+        LOG.debug("Evaluating [" + definitionChain + "] for uri [" + document.baseUri() + "]");
+        LOG.trace("Evaluating [" + definitionChain + "] for document [" + document + "]");
         final BiTuple<Supplier<Element>, Supplier<String>> tuple =
                 definitionChain.values().stream().anyMatch(d -> d.getType().isContentModifying())
                         ? content(() -> document, document.outerHtml())

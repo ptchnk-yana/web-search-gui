@@ -10,5 +10,7 @@ import org.easybatch.core.job.Job;
  */
 public interface JobRunner {
 
-    Job createSearchJob(BiTuple<Search, ResultEntryDefinition> searchTuple, int readLimit, long errorThreshold);
+    Job createSearchJob(BiTuple<Search, ResultEntryDefinition> searchTuple, int readLimit);
+
+    Job createFilterJob(BiTuple<Search, ResultEntryDefinition> searchTuple);
 }

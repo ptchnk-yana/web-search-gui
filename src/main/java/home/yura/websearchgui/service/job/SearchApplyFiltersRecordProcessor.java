@@ -8,6 +8,8 @@ import home.yura.websearchgui.model.SearchResultContent;
 import home.yura.websearchgui.service.FilterMatcher;
 import home.yura.websearchgui.util.LocalCollections;
 import home.yura.websearchgui.util.bean.BiTuple;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.easybatch.core.processor.RecordProcessor;
 import org.easybatch.core.record.GenericRecord;
 import org.easybatch.core.record.Record;
@@ -31,6 +33,7 @@ public class SearchApplyFiltersRecordProcessor implements
         RecordProcessor<
                 Record<List<Future<BiTuple<SearchResult, SearchResultContent>>>>,
                 Record<List<Future<BiTuple<SearchResult, SearchResultContent>>>>> {
+    private static final Log LOG = LogFactory.getLog(ExistingSearchRecordReader.class);
 
     private final FilterDao filterDao;
     private final FilterMatcher filterMatcher;
@@ -48,6 +51,7 @@ public class SearchApplyFiltersRecordProcessor implements
     @Override
     public Record<List<Future<BiTuple<SearchResult, SearchResultContent>>>> processRecord(
             final Record<List<Future<BiTuple<SearchResult, SearchResultContent>>>> record) throws Exception {
+        LOG.info("Processing [" + record.getPayload().size() + "] records");
 
         final Map<Long, Document> documentCache = new HashMap<>();
 
@@ -71,6 +75,7 @@ public class SearchApplyFiltersRecordProcessor implements
                         LocalCollections::addAllIfNotContains));
 
         if (!set.isEmpty()) {
+            LOG.info("Some filters were applied. [" + set.size() + "] numbers");
             return new GenericRecord<>(record.getHeader(),
                     LocalCollections
                             .addAllIfNotContains(

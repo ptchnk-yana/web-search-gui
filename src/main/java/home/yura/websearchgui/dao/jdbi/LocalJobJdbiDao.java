@@ -1,13 +1,18 @@
 package home.yura.websearchgui.dao.jdbi;
 
+import com.google.common.collect.ImmutableMap;
 import home.yura.websearchgui.dao.LocalJobDao;
 import home.yura.websearchgui.model.LocalJob;
 import home.yura.websearchgui.util.LocalJdbis;
+import home.yura.websearchgui.util.bean.BiTuple;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.skife.jdbi.v2.DBI;
 import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.sqlobject.*;
 import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
+import org.skife.jdbi.v2.util.IntegerColumnMapper;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -15,12 +20,27 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
 
+import static home.yura.websearchgui.util.LocalBeans.beanToMap;
 import static java.util.Optional.ofNullable;
 
 /**
  * @author yuriy.dunko on 14.03.17.
  */
 public class LocalJobJdbiDao implements LocalJobDao {
+
+    private static final Log LOG = LogFactory.getLog(LocalJobJdbiDao.class);
+    private static final String INSERT_QUERY = LocalJdbis.createInsertFromSelectQuery(
+            "local_job",
+            ImmutableMap.<String, BiTuple<String, String>>builder()
+                    .put("j.name", new BiTuple<>("name", "CHAR(40)"))
+                    .put("j.firstStep", new BiTuple<>("first_step", "SIGNED"))
+                    .put("j.lastStep", new BiTuple<>("last_step", "SIGNED"))
+                    .put("j.requiredStep", new BiTuple<>("required_step", "SIGNED"))
+                    .put("j.destinationId", new BiTuple<>("destination_id", "SIGNED"))
+                    .put("j.status", new BiTuple<>("status", "CHAR(8)")).build(),
+            ImmutableMap.of("j.name", "name", "j.destinationId", "destination_id"),
+            "(required_step = :j.requiredStep OR status IN ('STARTED', 'RUNNING'))");
+
     private final DBI dbi;
 
     public LocalJobJdbiDao(final DBI dbi) {
@@ -29,13 +49,19 @@ public class LocalJobJdbiDao implements LocalJobDao {
 
     @Override
     public LocalJob add(final LocalJob job) {
-        return ofNullable(this.dbi.inTransaction((conn, s) -> conn.attach(SearchResultJdbiResource.class).insert(job)))
+        LOG.debug("Adding [" + job + "]");
+        return ofNullable(this.dbi.inTransaction(
+                (conn, s) -> conn.createStatement(INSERT_QUERY)
+                        .bindFromMap(beanToMap("j", job))
+                        .executeAndReturnGeneratedKeys(IntegerColumnMapper.PRIMITIVE)
+                        .first()))
                 .map(job::copyWithId)
                 .orElseThrow(() -> new IllegalStateException("Cannot add " + job));
     }
 
     @Override
     public boolean getAndUpdateLocalJob(final int jobId, final Function<LocalJob, LocalJob> modifyFunction) {
+        LOG.debug("Updating by id [" + jobId + "] with [" + modifyFunction + "]");
         return this.dbi.inTransaction(((conn, s) -> {
             final SearchResultJdbiResource resource = conn.attach(SearchResultJdbiResource.class);
             return resource.update(modifyFunction.apply(resource.selectForUpdate(jobId)));
@@ -44,41 +70,24 @@ public class LocalJobJdbiDao implements LocalJobDao {
 
     @Override
     public boolean updateLocalJobStatus(final int id, final LocalJob.Status status) {
+        LOG.debug("Updating status by id [" + id+ "] on [" + status + "]");
         return this.dbi.inTransaction((conn, s) -> conn.attach(SearchResultJdbiResource.class).updateStatus(id, status)) > 0;
     }
 
     @Override
     public LocalJob findLastRun(final String name, final int destinationId) {
+        LOG.debug("Getting last run by name [" + name + "] and destination id [" + destinationId + "]");
         return this.dbi.withHandle(handle -> handle.attach(SearchResultJdbiResource.class).findLastRun(name, destinationId));
     }
 
     @Override
     public List<LocalJob> findAll() {
+        LOG.debug("Getting all");
         return this.dbi.withHandle(handle -> handle.attach(SearchResultJdbiResource.class).findAll());
     }
 
     @RegisterMapper(LocalJobJdbiMapper.class)
     public interface SearchResultJdbiResource {
-
-        @SqlUpdate("INSERT INTO local_job (                                             " +
-                "   name, first_step, last_step, required_step, destination_id, status) " +
-                "SELECT * FROM (                                                        " +
-                "   SELECT                                                              " +
-                "       CAST(:j.name AS CHAR(40)) AS name,                              " +
-                "       CAST(:j.firstStep AS SIGNED) AS first_step,                     " +
-                "       CAST(:j.lastStep AS SIGNED) AS last_step,                       " +
-                "       CAST(:j.requiredStep AS SIGNED) AS required_step,               " +
-                "       CAST(:j.destinationId AS SIGNED) AS destination_id,             " +
-                "       CAST(:j.status AS CHAR(8)) AS status) AS tmp                    " +
-                "WHERE NOT EXISTS (                                                     " +
-                "   SELECT *                                                            " +
-                "   FROM local_job                                                      " +
-                "   WHERE name = :j.name                                                " +
-                "       AND destination_id = :j.destinationId                           " +
-                "       AND (required_step = :j.requiredStep                            " +
-                "           OR status IN ('STARTED', 'RUNNING')))                       ")
-        @GetGeneratedKeys
-        Integer insert(@BindBean("j") LocalJob j);
 
         @SqlUpdate("UPDATE local_job                    " +
                 "SET                                    " +

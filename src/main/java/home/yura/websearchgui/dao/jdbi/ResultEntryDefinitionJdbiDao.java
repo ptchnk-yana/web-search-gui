@@ -108,6 +108,7 @@ public class ResultEntryDefinitionJdbiDao extends AbstractJdbiDao<ResultEntryDef
 
     @Override
     public ResultEntryDefinition add(final ResultEntryDefinition definition) {
+        this.log.debug("Adding [" + definition + "]");
         requireNonNull(definition, "resultEntryDefinition");
         final ImmutableMap<String, Map<Integer, ValueEvaluationDefinition>> valueEvaluationDefinitionsMap = ImmutableMap
                 .of(NAME_DESTINATION, definition.getNameExtractionChain(),
@@ -129,6 +130,7 @@ public class ResultEntryDefinitionJdbiDao extends AbstractJdbiDao<ResultEntryDef
 
     @Override
     public int delete(final ResultEntryDefinition definition) {
+        this.log.debug("Deleting [" + definition + "]");
         requireNonNull(definition, "resultEntryDefinition");
         return this.dbi.inTransaction((handle, status) ->
                 handle.createStatement(DELETE_DEFINITION_SQL).bind("id", definition.getId()).execute());
@@ -136,6 +138,7 @@ public class ResultEntryDefinitionJdbiDao extends AbstractJdbiDao<ResultEntryDef
 
     @Override
     public ResultEntryDefinition get(final int id) {
+        this.log.debug("Getting by id [" + id + "]");
         try (Handle handle = this.dbi.open()) {
             return queryManyToOne(handle, SELECT_DEFINITION_SQL, ImmutableMap.of("id", id))
                     .findFirst()
@@ -145,6 +148,7 @@ public class ResultEntryDefinitionJdbiDao extends AbstractJdbiDao<ResultEntryDef
 
     @Override
     public ResultEntryDefinition findBySearchId(final int searchId) {
+        this.log.debug("Getting by searchId [" + searchId + "]");
         try (Handle handle = this.dbi.open()) {
             return queryManyToOne(handle, SELECT_DEFINITION_BY_SEARCH_ID_SQL, ImmutableMap.of("sid", searchId))
                     .findFirst()
@@ -154,6 +158,7 @@ public class ResultEntryDefinitionJdbiDao extends AbstractJdbiDao<ResultEntryDef
 
     @Override
     public List<ResultEntryDefinition> list() {
+        this.log.debug("Getting all");
         try (Handle handle = this.dbi.open()) {
             return queryManyToOne(handle, SELECT_DEFINITIONS_SQL, ImmutableMap.of())
                     .collect(toList());
