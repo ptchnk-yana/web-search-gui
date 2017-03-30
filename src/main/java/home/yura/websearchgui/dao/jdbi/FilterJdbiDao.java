@@ -89,6 +89,7 @@ public class FilterJdbiDao extends AbstractJdbiDao<Filter> implements FilterDao 
 
     @Override
     public Filter add(final Filter filter) {
+        this.log.debug("Adding [" + filter + "]");
         final Filter.Builder builder = requireNonNull(filter, "filter").buildNew().setFilterItems(null);
 
         try (final Handle h = this.dbi.open()) {
@@ -116,6 +117,7 @@ public class FilterJdbiDao extends AbstractJdbiDao<Filter> implements FilterDao 
 
     @Override
     public FilterItem addItem(final FilterItem item) {
+        this.log.debug("Adding item [" + item + "]");
         requireNonNull(item, "item");
         requireNonNull(item.getFilterId(), "item.filterId");
         try (Handle h = this.dbi.open()) {
@@ -128,6 +130,7 @@ public class FilterJdbiDao extends AbstractJdbiDao<Filter> implements FilterDao 
 
     @Override
     public int delete(final Filter filter) {
+        this.log.debug("Deleting [" + filter + "]");
         requireNonNull(filter, "filter");
         try (Handle h = this.dbi.open()) {
             return h.inTransaction((conn, status) -> {
@@ -141,6 +144,7 @@ public class FilterJdbiDao extends AbstractJdbiDao<Filter> implements FilterDao 
 
     @Override
     public Filter get(final int id) {
+        this.log.debug("Getting by id [" + id + "]");
         try (Handle h = this.dbi.open()) {
             return h.createQuery(SELECT_FILTER_SQL)
                     .bind("id", id)
@@ -155,6 +159,7 @@ public class FilterJdbiDao extends AbstractJdbiDao<Filter> implements FilterDao 
 
     @Override
     public List<Filter> list() {
+        this.log.debug("Getting all");
         try (Handle h = this.dbi.open()) {
             return h.createQuery(SELECT_FILTERS_SQL)
                     .fold(new HashMap<>(), this::foldFilters)
@@ -167,6 +172,7 @@ public class FilterJdbiDao extends AbstractJdbiDao<Filter> implements FilterDao 
 
     @Override
     public List<Filter> findBySearchId(final int searchId) {
+        this.log.debug("Getting all by searchId [" + searchId + "]");
         try (Handle h = this.dbi.open()) {
             return h.createQuery(SELECT_FILTERS_BY_SEARCH_ID_SQL)
                     .bind("sid", searchId)

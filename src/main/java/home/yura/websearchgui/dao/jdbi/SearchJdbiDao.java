@@ -101,6 +101,7 @@ public class SearchJdbiDao extends AbstractJdbiDao<Search> implements SearchDao 
 
     @Override
     public Search add(final Search search) {
+        this.log.debug("Adding [" + search + "]");
         requireNonNull(search, "search");
         final Map<String, Map<Integer, ValueEvaluationDefinition>> valueEvaluationDefinitionsMap = ImmutableMap
                 .of(PREVIOUS_LINK_DESTINATION, search.getPreviousLinkLocation(),
@@ -120,6 +121,7 @@ public class SearchJdbiDao extends AbstractJdbiDao<Search> implements SearchDao 
 
     @Override
     public int delete(final Search search) {
+        this.log.debug("Deleting [" + search + "]");
         requireNonNull(search, "search");
         return this.dbi.inTransaction((handle, status) ->
                 handle.createStatement(DELETE_SEARCH_SQL).bind("id", search.getId()).execute());
@@ -127,6 +129,7 @@ public class SearchJdbiDao extends AbstractJdbiDao<Search> implements SearchDao 
 
     @Override
     public Search get(final int id) {
+        this.log.debug("Getting by id [" + id + "]");
         try (Handle handle = this.dbi.open()) {
             return queryManyToOne(handle, SELECT_SEARCH_SQL, ImmutableMap.of("id", id))
                     .findFirst()
@@ -136,6 +139,7 @@ public class SearchJdbiDao extends AbstractJdbiDao<Search> implements SearchDao 
 
     @Override
     public List<Search> list() {
+        this.log.debug("Getting all");
         try (Handle handle = this.dbi.open()) {
             return queryManyToOne(handle, SELECT_SEARCHES_SQL, ImmutableMap.of())
                     .collect(Collectors.toList());

@@ -3,6 +3,7 @@ package home.yura.websearchgui.util;
 import home.yura.websearchgui.model.ValueEvaluationDefinition;
 import home.yura.websearchgui.model.ValueEvaluationDefinition.ValueEvaluationDefinitionEngine;
 import home.yura.websearchgui.model.ValueEvaluationDefinition.ValueEvaluationDefinitionType;
+import home.yura.websearchgui.util.bean.BiTuple;
 import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.PreparedBatch;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
@@ -14,19 +15,23 @@ import java.sql.SQLException;
 import java.util.*;
 import java.util.function.BinaryOperator;
 import java.util.function.Function;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static com.google.common.base.Preconditions.checkState;
 import static home.yura.websearchgui.util.LocalBeans.beanToMap;
+import static home.yura.websearchgui.util.LocalFunctions.requireNonNull;
 import static java.lang.Enum.valueOf;
+import static java.lang.String.format;
+import static java.util.Optional.ofNullable;
 
 /**
  * @author yuriy.dunko on 08.03.17.
  */
 public final class LocalJdbis {
 
-    private LocalJdbis(){
+    private LocalJdbis() {
     }
 
     public static void extractSubValueEvaluationDefinitions(final ResultSet rs,
@@ -48,6 +53,37 @@ public final class LocalJdbis {
         } catch (final SQLException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public static String createInsertFromSelectQuery(final String tableName,
+                                                     final Map<String, BiTuple<String, String>> beanFieldToColumnAndType,
+                                                     final Map<String, String> uniqueFieldToColumns,
+                                                     final String extraCondition) {
+        requireNonNull(tableName, "tableName");
+        requireNonNull(beanFieldToColumnAndType, "beanFields");
+        requireNonNull(uniqueFieldToColumns, "tableColumns");
+
+        return "INSERT INTO " + tableName + " (" +
+                beanFieldToColumnAndType.values().stream().map(BiTuple::getFirst).collect(Collector.of(
+                        () -> new StringJoiner(", "),
+                        StringJoiner::add,
+                        StringJoiner::merge,
+                        StringJoiner::toString)) +
+                ") SELECT * FROM (SELECT " +
+                beanFieldToColumnAndType.entrySet().stream().collect(Collector.of(
+                        () -> new StringJoiner(", "),
+                        (j, e) -> j.add(format("CAST(:%s AS %s) AS %s", e.getKey(), e.getValue().getSecond(), e.getValue().getFirst())),
+                        StringJoiner::merge,
+                        StringJoiner::toString)) +
+                ") AS tmp WHERE NOT EXISTS (" +
+                "SELECT * FROM " + tableName + " WHERE " +
+                uniqueFieldToColumns.entrySet().stream().collect(Collector.of(
+                        () -> new StringJoiner(" AND "),
+                        (j, e) -> j.add(format("%s = :%s", e.getValue(), e.getKey())),
+                        StringJoiner::merge,
+                        StringJoiner::toString)) +
+                ofNullable(extraCondition).map(s -> " AND " + s).orElse("") +
+                ")";
     }
 
     public static <T> Integer insertWithSubLists(final Handle handle,

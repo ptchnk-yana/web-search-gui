@@ -90,7 +90,7 @@ public class TestUtils {
                 randomString(),
                 resultEntryDefinitionId,
                 filterItemId,
-                randomLong(),
+                (long) randomInt(),
                 randomString(),
                 false);
     }

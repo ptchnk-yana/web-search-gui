@@ -1,6 +1,8 @@
 package home.yura.websearchgui.dao.jdbi;
 
 import home.yura.websearchgui.model.AbstractModel;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.impl.SimpleLog;
 import org.skife.jdbi.v2.DBI;
 
 import java.util.List;
@@ -11,8 +13,8 @@ import static home.yura.websearchgui.util.LocalFunctions.requireNonNull;
 public abstract class AbstractJdbiResourceDao<T extends AbstractModel, S extends AbstractJdbiResourceDao.SqlObjectType<T>>
         extends AbstractJdbiDao<T> {
 
-    private final Class<T> beanClass;
-    private final Class<S> sqlObjectType;
+    protected final Class<T> beanClass;
+    protected final Class<S> sqlObjectType;
 
     AbstractJdbiResourceDao(final DBI dbi, final Class<T> beanClass, final Class<S> sqlObjectType) {
         super(dbi);
@@ -22,17 +24,20 @@ public abstract class AbstractJdbiResourceDao<T extends AbstractModel, S extends
 
     @Override
     public int delete(final T t) {
-        return handle(s -> s.delete(requireNonNull(requireNonNull(t).getId())));
+        this.log.debug("Deleting [" + t + "]");
+        return inTransaction(s -> s.delete(requireNonNull(requireNonNull(t).getId())));
     }
 
     @Override
     public T get(final int id) {
-        return handle(s -> s.findById(id));
+        this.log.debug("Getting by id [" + id + "]");
+        return inTransaction(s -> s.findById(id));
     }
 
     @Override
     public List<T> list() {
-        return handle(SqlObjectType::findAll);
+        this.log.debug("Getting all");
+        return inTransaction(SqlObjectType::findAll);
     }
 
     @Override
@@ -40,7 +45,7 @@ public abstract class AbstractJdbiResourceDao<T extends AbstractModel, S extends
         return this.beanClass;
     }
 
-    <K> K handle(final Function<S, K> function){
+    <K> K inTransaction(final Function<S, K> function){
         return this.dbi.inTransaction((conn, status) -> function.apply(conn.attach(this.sqlObjectType)));
     }
 

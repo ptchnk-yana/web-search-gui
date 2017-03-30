@@ -6,6 +6,8 @@ import home.yura.websearchgui.model.SearchResultContent;
 import home.yura.websearchgui.service.ValueEvaluator;
 import home.yura.websearchgui.util.LocalHttpUtils;
 import home.yura.websearchgui.util.bean.BiTuple;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.easybatch.core.processor.RecordProcessor;
 import org.easybatch.core.record.GenericRecord;
@@ -26,6 +28,7 @@ public class SearchRecordProcessor implements
         RecordProcessor<
                 Record<List<SearchResult>>,
                 Record<List<Future<BiTuple<SearchResult, SearchResultContent>>>>> {
+    private static final Log LOG = LogFactory.getLog(SearchRecordProcessor.class);
 
     private final ExecutorService poolExecutor;
     private final ValueEvaluator valueEvaluator;
@@ -46,16 +49,19 @@ public class SearchRecordProcessor implements
     @Override
     public Record<List<Future<BiTuple<SearchResult, SearchResultContent>>>> processRecord(
             final Record<List<SearchResult>> record) throws Exception {
-
+        LOG.info("Processing [" + record.getPayload().size() + "] records");
         return new GenericRecord<>(
                 record.getHeader(),
                 record.getPayload().stream().map(searchResult ->
-                        this.poolExecutor.submit(() -> new BiTuple<>(
-                                searchResult,
-                                SearchResultContent.create(
-                                        this.valueEvaluator.evaluate(
-                                                this.resultEntryDefinition.getContentExtractionChain(),
-                                                LocalHttpUtils.readDocument(this.client, searchResult.getUrl())))))
+                        this.poolExecutor.submit(() -> {
+                            LOG.debug("Preparing content for [" + searchResult + "]");
+                            return new BiTuple<>(
+                                    searchResult,
+                                    SearchResultContent.create(
+                                            this.valueEvaluator.evaluate(
+                                                    this.resultEntryDefinition.getContentExtractionChain(),
+                                                    LocalHttpUtils.readDocument(this.client, searchResult.getUrl()))));
+                        })
                 ).collect(Collectors.toList()));
     }
 }

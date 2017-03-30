@@ -7,6 +7,8 @@ import home.yura.websearchgui.model.SearchResultContent;
 import home.yura.websearchgui.util.LocalFunctions;
 import home.yura.websearchgui.util.bean.BiTuple;
 import home.yura.websearchgui.util.bean.Tuple;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.easybatch.core.record.Batch;
 import org.easybatch.core.record.Record;
 import org.easybatch.core.writer.RecordWriter;
@@ -25,6 +27,7 @@ import static java.util.stream.Collectors.toList;
  * @author yuriy.dunko on 11.03.17.
  */
 public class SearchResultRecordWriter implements RecordWriter {
+    private static final Log LOG = LogFactory.getLog(SearchRecordReader.class);
 
     private final Function<List<SearchResult>, ?> saveSearchResultFunction;
     @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
@@ -50,11 +53,13 @@ public class SearchResultRecordWriter implements RecordWriter {
 
     @Override
     public void open() throws Exception {
+        LOG.info("Opening writer");
         this.savedFutures.clear();
     }
 
     @Override
     public void close() throws Exception {
+        LOG.info("Closing writer");
         for(final Future<?> future : this.savedFutures) {
             future.get();
         }
@@ -63,6 +68,7 @@ public class SearchResultRecordWriter implements RecordWriter {
 
     @Override
     public void writeRecords(final Batch batch) throws Exception {
+        LOG.info("Writing batch [" + batch.size() + "]");
         for (@SuppressWarnings("unchecked") final Record<List<Future<BiTuple<SearchResult, SearchResultContent>>>> record : batch) {
             final List<BiTuple<SearchResult, SearchResultContent>> request = record
                     .getPayload()

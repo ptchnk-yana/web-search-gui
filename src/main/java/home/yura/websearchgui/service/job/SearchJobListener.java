@@ -4,6 +4,8 @@ import com.google.common.collect.ImmutableMap;
 import home.yura.websearchgui.dao.LocalJobDao;
 import home.yura.websearchgui.model.LocalJob;
 import home.yura.websearchgui.model.Search;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.easybatch.core.job.JobParameters;
 import org.easybatch.core.job.JobReport;
 import org.easybatch.core.job.JobStatus;
@@ -17,8 +19,9 @@ import static home.yura.websearchgui.util.LocalFunctions.requireNonNull;
 /**
  * @author yuriy.dunko on 16.03.17.
  */
-public class SearchJobListener implements JobListener{
+public class SearchJobListener implements JobListener {
 
+    private static final Log LOG = LogFactory.getLog(SearchJobListener.class);
     public static final String JOB_ID_METRIC = "job_id";
 
     private static final Map<JobStatus, LocalJob.Status> STATUS_MAP = ImmutableMap.of(
@@ -36,10 +39,10 @@ public class SearchJobListener implements JobListener{
 
     private Integer jobId = null;
 
-    public SearchJobListener(final LocalJobDao jobDao, final Search search) {
+    public SearchJobListener(final LocalJobDao jobDao, final Search search, final String jobBaseName) {
         this.jobDao = requireNonNull(jobDao, "jobDao");
         this.search = requireNonNull(search, "search");
-        this.jobName = getJobName(search);
+        this.jobName = getJobName(jobBaseName);
         this.requiredStep = Optional
                 .ofNullable(jobDao.findLastRun(this.jobName, requireNonNull(this.search.getId(), "search.id")))
                 .map(LocalJob::getFirstStep)
@@ -48,12 +51,14 @@ public class SearchJobListener implements JobListener{
 
     @Override
     public void beforeJobStart(final JobParameters jobParameters) {
-        this.jobId = requireNonNull(
-                this.jobDao.add(LocalJob.create(this.jobName, this.requiredStep, this.search.getId())).getId(),"id");
+        final LocalJob job = this.jobDao.add(LocalJob.create(this.jobName, this.requiredStep, this.search.getId()));
+        LOG.info("Starting job [" + job + "]");
+        this.jobId = requireNonNull(job.getId(),"id");
     }
 
     @Override
     public void afterJobEnd(final JobReport jobReport) {
+        LOG.info("Finishing job with id [" + this.jobId + "] with status [" + jobReport.getStatus() + "]");
         jobReport.getMetrics().addMetric(JOB_ID_METRIC, jobId);
         this.jobDao.getAndUpdateLocalJob(this.jobId,
                 job -> requireNonNull(job, "job").copyWithStatus(STATUS_MAP.get(jobReport.getStatus())));
@@ -71,8 +76,8 @@ public class SearchJobListener implements JobListener{
         return this.jobName;
     }
 
-    private static String getJobName(final Search search) {
-        return Search.class.getSimpleName().toLowerCase() + "-fill";
+    private static String getJobName(final String jobBaseName) {
+        return (Search.class.getSimpleName() + "-" + requireNonNull(jobBaseName, "jobBaseName")).toLowerCase();
     }
 
 }

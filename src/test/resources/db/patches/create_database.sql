@@ -77,7 +77,7 @@ CREATE TABLE search_result (
 
 CREATE TABLE local_job (
     id INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
-    name VARCHAR(40) NOT NULL,
+    name VARCHAR(48) NOT NULL,
     first_step BIGINT,
     last_step BIGINT,
     required_step BIGINT DEFAULT 0,
