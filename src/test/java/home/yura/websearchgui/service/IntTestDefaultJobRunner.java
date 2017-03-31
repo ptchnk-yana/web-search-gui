@@ -4,10 +4,11 @@ import com.google.common.io.Files;
 import home.yura.websearchgui.dao.jdbi.AbstractJdbiTest;
 import home.yura.websearchgui.dao.rsource.file.SearchResultContentFileResource;
 import home.yura.websearchgui.model.*;
-import home.yura.websearchgui.util.bean.BiTuple;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.easybatch.core.job.JobReport;
 import org.easybatch.core.job.JobStatus;
 import org.junit.Test;
@@ -84,7 +85,11 @@ public class IntTestDefaultJobRunner extends AbstractJdbiTest {
                 index(of(ValueEvaluationDefinition.create(EXTRACT_CONTENT, CSS_QUERY_SEARCH, "div.contentarticle"),
                         ValueEvaluationDefinition.create(DELETE_CONTENT_PART, CSS_QUERY_SEARCH, "table")))));
 
-        final DefaultJobRunner jobRunner = new DefaultJobRunner(HttpClientBuilder.create()::build,
+        final PoolingHttpClientConnectionManager connManager = new PoolingHttpClientConnectionManager();
+        connManager.setMaxTotal(200);
+        connManager.setDefaultMaxPerRoute(100);
+        final DefaultJobRunner jobRunner = new DefaultJobRunner(
+                HttpClientBuilder.create().setConnectionManager(connManager).setConnectionManagerShared(true)::build,
                 this.httpQueryPool,
                 this.filterMatcher,
                 this.valueEvaluator,
@@ -96,7 +101,7 @@ public class IntTestDefaultJobRunner extends AbstractJdbiTest {
                 1);
 
         // search job
-        final JobReport searchReport = jobRunner.createSearchJob(new BiTuple<>(search, definition), 3).call();
+        final JobReport searchReport = jobRunner.createSearchJob(Pair.of(search, definition), 3).call();
         assertThat(searchReport.getStatus(), is(JobStatus.COMPLETED));
 
         final LocalJob lastRun = this.localJobJdbiDao.findLastRun(searchReport.getJobName(), requireNonNull(search.getId()));
@@ -117,14 +122,14 @@ public class IntTestDefaultJobRunner extends AbstractJdbiTest {
         assertThat(contents, hasSize(results.size()));
 
         // filter job
-        final Filter filter = filterDao.add(Filter.builder()
+        final Filter filter = this.filterDao.add(Filter.builder()
                 .setName(randomString())
                 .setDescription(randomString())
                 .setSearchId(search.getId())
                 .addFilterItem(FilterItem.create(null, null, CONTENT, FilterEngine.REG_EXP, NO, "(.)"))
                 .build());
 
-        final JobReport filterReport = jobRunner.createFilterJob(new BiTuple<>(search, definition)).call();
+        final JobReport filterReport = jobRunner.createFilterJob(Pair.of(search, definition)).call();
         assertThat(filterReport.getStatus(), is(JobStatus.COMPLETED));
 
         final List<Integer> filterIds = this.searchResultDao.list()

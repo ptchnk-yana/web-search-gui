@@ -1,12 +1,11 @@
 package home.yura.websearchgui.dao.jdbi;
 
-
 import com.google.common.collect.ImmutableMap;
 import home.yura.websearchgui.dao.SearchResultDao;
 import home.yura.websearchgui.dao.jdbi.SearchResultJdbiResourceDao.SearchResultJdbiResource;
 import home.yura.websearchgui.model.SearchResult;
 import home.yura.websearchgui.util.LocalJdbis;
-import home.yura.websearchgui.util.bean.BiTuple;
+import org.apache.commons.lang3.tuple.Pair;
 import org.skife.jdbi.v2.DBI;
 import org.skife.jdbi.v2.PreparedBatch;
 import org.skife.jdbi.v2.StatementContext;
@@ -34,15 +33,15 @@ public class SearchResultJdbiResourceDao extends AbstractJdbiResourceDao<SearchR
 
     private static final String INSERT_QUERY = LocalJdbis.createInsertFromSelectQuery(
             "search_result",
-            ImmutableMap.<String, BiTuple<String, String>>builder()
-                    .put("s.name", new BiTuple<>("name", "CHAR(128)"))
+            ImmutableMap.<String, Pair<String, String>>builder()
+                    .put("s.name", Pair.of("name", "CHAR(128)"))
                     // TODO: use binary
-                    .put("s.description", new BiTuple<>("description", "CHAR(1024)"))
-                    .put("s.resultEntryDefinitionId", new BiTuple<>("result_entry_definition_id", "SIGNED"))
-                    .put("s.filterItemId", new BiTuple<>("filter_item_id", "SIGNED"))
-                    .put("s.internalId", new BiTuple<>("internal_id", "SIGNED"))
-                    .put("s.url", new BiTuple<>("url", "CHAR(256)"))
-                    .put("s.viewed", new BiTuple<>("viewed", "SIGNED")).build(),
+                    .put("s.description", Pair.of("description", "CHAR(1024)"))
+                    .put("s.resultEntryDefinitionId", Pair.of("result_entry_definition_id", "SIGNED"))
+                    .put("s.filterItemId", Pair.of("filter_item_id", "SIGNED"))
+                    .put("s.internalId", Pair.of("internal_id", "SIGNED"))
+                    .put("s.url", Pair.of("url", "CHAR(256)"))
+                    .put("s.viewed", Pair.of("viewed", "SIGNED")).build(),
             ImmutableMap.of("s.resultEntryDefinitionId", "result_entry_definition_id", "s.internalId", "internal_id"),
             null);
 

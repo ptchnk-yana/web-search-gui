@@ -3,11 +3,10 @@ package home.yura.websearchgui.dao.rsource.file;
 import home.yura.websearchgui.dao.rsource.SearchResultContentResource;
 import home.yura.websearchgui.model.SearchResult;
 import home.yura.websearchgui.model.SearchResultContent;
-import home.yura.websearchgui.util.bean.BiTuple;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.ObjectUtils;
+import org.apache.commons.lang3.tuple.Pair;
 
-import javax.swing.text.html.Option;
 import java.io.*;
 import java.util.Collection;
 import java.util.List;
@@ -78,11 +77,11 @@ public class SearchResultContentFileResource implements SearchResultContentResou
     }
 
     @Override
-    public Future<Void> addBatch(final Collection<BiTuple<SearchResult, SearchResultContent>> batch) {
+    public Future<Void> addBatch(final Collection<Pair<SearchResult, SearchResultContent>> batch) {
         return new Future<Void>() {
             final List<Future<Void>> futures = requireNonNull(batch, "batch")
                     .stream()
-                    .map(tuple -> add(tuple.getFirst(), tuple.getSecond()))
+                    .map(tuple -> add(tuple.getLeft(), tuple.getRight()))
                     .collect(Collectors.toList());
 
             @Override

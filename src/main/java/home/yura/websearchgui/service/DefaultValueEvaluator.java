@@ -6,7 +6,7 @@ import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableMap;
 import home.yura.websearchgui.model.ValueEvaluationDefinition;
 import home.yura.websearchgui.model.ValueEvaluationDefinition.ValueEvaluationDefinitionEngine;
-import home.yura.websearchgui.util.bean.BiTuple;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jsoup.Jsoup;
@@ -55,7 +55,7 @@ public class DefaultValueEvaluator implements ValueEvaluator {
     public String evaluate(final Map<Integer, ValueEvaluationDefinition> definitionChain, final Element document) {
         LOG.debug("Evaluating [" + definitionChain + "] for uri [" + document.baseUri() + "]");
         LOG.trace("Evaluating [" + definitionChain + "] for document [" + document + "]");
-        final BiTuple<Supplier<Element>, Supplier<String>> tuple =
+        final Pair<Supplier<Element>, Supplier<String>> tuple =
                 definitionChain.values().stream().anyMatch(d -> d.getType().isContentModifying())
                         ? content(() -> document, document.outerHtml())
                         : document(document);
@@ -69,36 +69,36 @@ public class DefaultValueEvaluator implements ValueEvaluator {
                             if (base == null) {
                                 return null;
                             }
-                            return EVALUATORS_FACTORY.get(entry).evaluate(base.getFirst(), base.getSecond(), entry.getExpression());
+                            return EVALUATORS_FACTORY.get(entry).evaluate(base.getLeft(), base.getRight(), entry.getExpression());
                         },
                         (f, s) -> {
                             // just in case if we run in parallel stream
                             throw new IllegalArgumentException("Combine action isn't supported");
                         }))
-                .map(t -> t.getSecond().get())
+                .map(t -> t.getRight().get())
                 .orElse(null);
     }
 
     interface Evaluator {
 
-        BiTuple<Supplier<Element>, Supplier<String>> evaluate(final Supplier<Element> document,
+        Pair<Supplier<Element>, Supplier<String>> evaluate(final Supplier<Element> document,
                                                               final Supplier<String> documentContent,
                                                               final String expression);
 
     }
 
     static class EvaluatorFactory {
-        Map<BiTuple<ValueEvaluationDefinition.ValueEvaluationDefinitionType, ValueEvaluationDefinitionEngine>, Evaluator> map;
+        Map<Pair<ValueEvaluationDefinition.ValueEvaluationDefinitionType, ValueEvaluationDefinitionEngine>, Evaluator> map;
 
         EvaluatorFactory() {
             this.map = ImmutableMap.of(
-                    new BiTuple<>(EXTRACT_CONTENT, REG_EXP), (d, c, e) ->
+                    Pair.of(EXTRACT_CONTENT, REG_EXP), (d, c, e) ->
                             content(d, findFirstGroup(PATTERN_CACHE.getUnchecked(e), c.get())),
-                    new BiTuple<>(EXTRACT_CONTENT, CSS_QUERY_SEARCH), (d, c, e) ->
+                    Pair.of(EXTRACT_CONTENT, CSS_QUERY_SEARCH), (d, c, e) ->
                             document(d.get().select(e).first()),
-                    new BiTuple<>(DELETE_CONTENT_PART, REG_EXP), (d, c, e) ->
+                    Pair.of(DELETE_CONTENT_PART, REG_EXP), (d, c, e) ->
                             content(d, PATTERN_CACHE.getUnchecked(e).splitAsStream(c.get()).collect(joining())),
-                    new BiTuple<>(DELETE_CONTENT_PART, CSS_QUERY_SEARCH), (d, c, e) -> {
+                    Pair.of(DELETE_CONTENT_PART, CSS_QUERY_SEARCH), (d, c, e) -> {
                         final Element element = d.get();
                         element.select(e).remove();
                         return document(element);
@@ -107,26 +107,26 @@ public class DefaultValueEvaluator implements ValueEvaluator {
 
         Evaluator get(final ValueEvaluationDefinition processor) {
             requireNonNull(processor, "processor");
-            return requireNonNull(this.map.get(new BiTuple<>(processor.getType(), processor.getEngine())),
+            return requireNonNull(this.map.get(Pair.of(processor.getType(), processor.getEngine())),
                     format("Evaluator for %s not found", processor));
         }
     }
 
-    static BiTuple<Supplier<Element>, Supplier<String>> content(final Supplier<Element> original, final String content) {
+    static Pair<Supplier<Element>, Supplier<String>> content(final Supplier<Element> original, final String content) {
         if (content == null) {
             return null;
         }
-        return new BiTuple<>(() -> {
+        return Pair.of(() -> {
             final Document document = Jsoup.parse(content);
             document.setBaseUri(original.get().baseUri());
             return document;
         }, () -> content);
     }
 
-    static BiTuple<Supplier<Element>, Supplier<String>> document(final Element document) {
+    static Pair<Supplier<Element>, Supplier<String>> document(final Element document) {
         if (document == null) {
             return null;
         }
-        return new BiTuple<>(() -> document, document::outerHtml);
+        return Pair.of(() -> document, document::outerHtml);
     }
 }

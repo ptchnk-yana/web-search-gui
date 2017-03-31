@@ -2,7 +2,7 @@ package home.yura.websearchgui.service;
 
 import home.yura.websearchgui.model.ResultEntryDefinition;
 import home.yura.websearchgui.model.Search;
-import home.yura.websearchgui.util.bean.BiTuple;
+import org.apache.commons.lang3.tuple.Pair;
 import org.easybatch.core.job.Job;
 
 /**
@@ -10,7 +10,7 @@ import org.easybatch.core.job.Job;
  */
 public interface JobRunner {
 
-    Job createSearchJob(BiTuple<Search, ResultEntryDefinition> searchTuple, int readLimit);
+    Job createSearchJob(Pair<Search, ResultEntryDefinition> searchTuple, int readLimit);
 
-    Job createFilterJob(BiTuple<Search, ResultEntryDefinition> searchTuple);
+    Job createFilterJob(Pair<Search, ResultEntryDefinition> searchTuple);
 }

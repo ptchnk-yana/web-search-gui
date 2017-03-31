@@ -9,8 +9,8 @@ import home.yura.websearchgui.model.ValueEvaluationDefinition;
 import home.yura.websearchgui.service.DefaultValueEvaluator;
 import home.yura.websearchgui.service.ValueEvaluator;
 import home.yura.websearchgui.util.LocalBeans;
-import home.yura.websearchgui.util.bean.BiTuple;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.easybatch.core.record.GenericRecord;
 import org.easybatch.core.record.Header;
 import org.easybatch.core.record.Record;
@@ -68,7 +68,7 @@ public class TestSearchRecordProcessor {
                 VALUE_EVALUATOR,
                 () -> TestUtils.createHttpClient(CONTENT_MAP),
                 createResultEntryDefinition());
-        final Record<List<Future<BiTuple<SearchResult, SearchResultContent>>>> result = searchRecordProcessor.processRecord(
+        final Record<List<Future<Pair<SearchResult, SearchResultContent>>>> result = searchRecordProcessor.processRecord(
                 new GenericRecord<>(
                         new Header(1L, "", new Date()),
                         of(
@@ -90,7 +90,7 @@ public class TestSearchRecordProcessor {
         final List<String> list = result
                 .getPayload()
                 .stream()
-                .map(f -> process(() -> f.get().getSecond().getContent(), RuntimeException::new))
+                .map(f -> process(() -> f.get().getRight().getContent(), RuntimeException::new))
                 .collect(toList());
         assertThat(list, hasItems(not(isEmptyOrNullString()), not(isEmptyOrNullString()), not(isEmptyOrNullString())));
 

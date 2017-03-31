@@ -7,7 +7,7 @@ import home.yura.websearchgui.model.SearchResult;
 import home.yura.websearchgui.model.SearchResultContent;
 import home.yura.websearchgui.service.FilterMatcher;
 import home.yura.websearchgui.util.LocalCollections;
-import home.yura.websearchgui.util.bean.BiTuple;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.easybatch.core.processor.RecordProcessor;
@@ -31,8 +31,8 @@ import static java.util.stream.Collectors.toSet;
  */
 public class SearchApplyFiltersRecordProcessor implements
         RecordProcessor<
-                Record<List<Future<BiTuple<SearchResult, SearchResultContent>>>>,
-                Record<List<Future<BiTuple<SearchResult, SearchResultContent>>>>> {
+                Record<List<Future<Pair<SearchResult, SearchResultContent>>>>,
+                Record<List<Future<Pair<SearchResult, SearchResultContent>>>>> {
     private static final Log LOG = LogFactory.getLog(ExistingSearchRecordReader.class);
 
     private final FilterDao filterDao;
@@ -49,28 +49,28 @@ public class SearchApplyFiltersRecordProcessor implements
 
 
     @Override
-    public Record<List<Future<BiTuple<SearchResult, SearchResultContent>>>> processRecord(
-            final Record<List<Future<BiTuple<SearchResult, SearchResultContent>>>> record) throws Exception {
+    public Record<List<Future<Pair<SearchResult, SearchResultContent>>>> processRecord(
+            final Record<List<Future<Pair<SearchResult, SearchResultContent>>>> record) throws Exception {
         LOG.info("Processing [" + record.getPayload().size() + "] records");
 
         final Map<Long, Document> documentCache = new HashMap<>();
 
-        final Set<BiTuple<SearchResult, SearchResultContent>> set = this.filterDao.findBySearchId(this.resultEntryDefinition.getSearchId())
+        final Set<Pair<SearchResult, SearchResultContent>> set = this.filterDao.findBySearchId(this.resultEntryDefinition.getSearchId())
                 .stream()
                 .map(filter -> record.getPayload()
                         .stream()
                         .map(futureTuple -> {
-                            final BiTuple<SearchResult, SearchResultContent> tuple = process(futureTuple::get);
+                            final Pair<SearchResult, SearchResultContent> tuple = process(futureTuple::get);
                             return Optional
                                     // TODO: chose a filter id by most matches
                                     .ofNullable(this.filterMatcher.getMatchedItemId(filter, document(documentCache, tuple)))
-                                    .map(fItemId -> tuple.copyWithFirst(tuple.getFirst().copyWithFilterItemId(fItemId)));
+                                    .map(fItemId ->  Pair.of(tuple.getLeft().copyWithFilterItemId(fItemId), tuple.getRight()));
                         }).filter(Optional::isPresent)
                         .map(Optional::get)
                         .collect(Collectors.toSet()))
                 .flatMap(Collection::stream)
                 .collect(Collector.of(
-                        () -> new TreeSet<>(Comparator.comparingLong(o -> o.getFirst().getInternalId())),
+                        () -> new TreeSet<>(Comparator.comparingLong(o -> o.getLeft().getInternalId())),
                         LocalCollections::addIfNotContains,
                         LocalCollections::addAllIfNotContains));
 
@@ -90,12 +90,12 @@ public class SearchApplyFiltersRecordProcessor implements
     }
 
     private Document document(final Map<Long, Document> documentCache,
-                              final BiTuple<SearchResult, SearchResultContent> tuple) {
-        final Long internalId = tuple.getFirst().getInternalId();
+                              final Pair<SearchResult, SearchResultContent> tuple) {
+        final Long internalId = tuple.getLeft().getInternalId();
         Document document = documentCache.get(internalId);
         if (document == null) {
-            documentCache.put(internalId, document = Jsoup.parse(tuple.getSecond().getContent()));
-            document.setBaseUri(tuple.getFirst().getUrl());
+            documentCache.put(internalId, document = Jsoup.parse(tuple.getRight().getContent()));
+            document.setBaseUri(tuple.getLeft().getUrl());
         }
         return document;
     }

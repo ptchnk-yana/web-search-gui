@@ -3,7 +3,7 @@ package home.yura.websearchgui.util;
 import home.yura.websearchgui.model.ValueEvaluationDefinition;
 import home.yura.websearchgui.model.ValueEvaluationDefinition.ValueEvaluationDefinitionEngine;
 import home.yura.websearchgui.model.ValueEvaluationDefinition.ValueEvaluationDefinitionType;
-import home.yura.websearchgui.util.bean.BiTuple;
+import org.apache.commons.lang3.tuple.Pair;
 import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.PreparedBatch;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
@@ -56,7 +56,7 @@ public final class LocalJdbis {
     }
 
     public static String createInsertFromSelectQuery(final String tableName,
-                                                     final Map<String, BiTuple<String, String>> beanFieldToColumnAndType,
+                                                     final Map<String, Pair<String, String>> beanFieldToColumnAndType,
                                                      final Map<String, String> uniqueFieldToColumns,
                                                      final String extraCondition) {
         requireNonNull(tableName, "tableName");
@@ -64,7 +64,7 @@ public final class LocalJdbis {
         requireNonNull(uniqueFieldToColumns, "tableColumns");
 
         return "INSERT INTO " + tableName + " (" +
-                beanFieldToColumnAndType.values().stream().map(BiTuple::getFirst).collect(Collector.of(
+                beanFieldToColumnAndType.values().stream().map(Pair::getLeft).collect(Collector.of(
                         () -> new StringJoiner(", "),
                         StringJoiner::add,
                         StringJoiner::merge,
@@ -72,7 +72,7 @@ public final class LocalJdbis {
                 ") SELECT * FROM (SELECT " +
                 beanFieldToColumnAndType.entrySet().stream().collect(Collector.of(
                         () -> new StringJoiner(", "),
-                        (j, e) -> j.add(format("CAST(:%s AS %s) AS %s", e.getKey(), e.getValue().getSecond(), e.getValue().getFirst())),
+                        (j, e) -> j.add(format("CAST(:%s AS %s) AS %s", e.getKey(), e.getValue().getRight(), e.getValue().getLeft())),
                         StringJoiner::merge,
                         StringJoiner::toString)) +
                 ") AS tmp WHERE NOT EXISTS (" +

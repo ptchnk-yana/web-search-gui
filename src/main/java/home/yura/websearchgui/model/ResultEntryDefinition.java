@@ -17,6 +17,7 @@ import static org.apache.commons.lang3.ObjectUtils.firstNonNull;
 @AutoValue
 public abstract class ResultEntryDefinition implements AbstractModel {
 
+    @SuppressWarnings("unchecked")
     public static ResultEntryDefinition create(final Integer id,
                                                final Integer searchId,
                                                final String entryBlockLocation,

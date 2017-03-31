@@ -4,7 +4,7 @@ import com.google.common.collect.Streams;
 import home.yura.websearchgui.dao.LocalJobDao;
 import home.yura.websearchgui.model.SearchResult;
 import home.yura.websearchgui.model.SearchResultContent;
-import home.yura.websearchgui.util.bean.BiTuple;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.easybatch.core.listener.BatchListener;
@@ -54,8 +54,8 @@ public class SearchBatchListener implements BatchListener {
         LOG.info("Batch [" + batch.size() + "] was written");
         @SuppressWarnings("unchecked")
         final long[] steps = Streams.stream(batch.iterator())
-                .flatMap(listRecord -> ((Record<List<Future<BiTuple<SearchResult, SearchResultContent>>>>) listRecord).getPayload().stream())
-                .map(biTupleFuture -> process(biTupleFuture::get).getFirst().getInternalId())
+                .flatMap(listRecord -> ((Record<List<Future<Pair<SearchResult, SearchResultContent>>>>) listRecord).getPayload().stream())
+                .map(biTupleFuture -> process(biTupleFuture::get).getLeft().getInternalId())
                 .collect(Collector.of(() -> new long[]{0L, 0L},
                         (array, internalId) -> {
                             if (array[0] > internalId) {

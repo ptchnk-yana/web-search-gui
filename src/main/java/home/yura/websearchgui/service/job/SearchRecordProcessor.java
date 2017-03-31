@@ -5,7 +5,7 @@ import home.yura.websearchgui.model.SearchResult;
 import home.yura.websearchgui.model.SearchResultContent;
 import home.yura.websearchgui.service.ValueEvaluator;
 import home.yura.websearchgui.util.LocalHttpUtils;
-import home.yura.websearchgui.util.bean.BiTuple;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -27,7 +27,7 @@ import static home.yura.websearchgui.util.LocalFunctions.requireNonNull;
 public class SearchRecordProcessor implements
         RecordProcessor<
                 Record<List<SearchResult>>,
-                Record<List<Future<BiTuple<SearchResult, SearchResultContent>>>>> {
+                Record<List<Future<Pair<SearchResult, SearchResultContent>>>>> {
     private static final Log LOG = LogFactory.getLog(SearchRecordProcessor.class);
 
     private final ExecutorService poolExecutor;
@@ -47,7 +47,7 @@ public class SearchRecordProcessor implements
     }
 
     @Override
-    public Record<List<Future<BiTuple<SearchResult, SearchResultContent>>>> processRecord(
+    public Record<List<Future<Pair<SearchResult, SearchResultContent>>>> processRecord(
             final Record<List<SearchResult>> record) throws Exception {
         LOG.info("Processing [" + record.getPayload().size() + "] records");
         return new GenericRecord<>(
@@ -55,7 +55,7 @@ public class SearchRecordProcessor implements
                 record.getPayload().stream().map(searchResult ->
                         this.poolExecutor.submit(() -> {
                             LOG.debug("Preparing content for [" + searchResult + "]");
-                            return new BiTuple<>(
+                            return Pair.of(
                                     searchResult,
                                     SearchResultContent.create(
                                             this.valueEvaluator.evaluate(

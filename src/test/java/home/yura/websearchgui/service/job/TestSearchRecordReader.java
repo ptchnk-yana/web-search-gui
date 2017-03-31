@@ -8,7 +8,7 @@ import home.yura.websearchgui.model.SearchResult;
 import home.yura.websearchgui.model.ValueEvaluationDefinition;
 import home.yura.websearchgui.service.DefaultValueEvaluator;
 import home.yura.websearchgui.service.ValueEvaluator;
-import home.yura.websearchgui.util.bean.BiTuple;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.easybatch.core.record.Record;
 import org.junit.Test;
@@ -126,8 +126,8 @@ public class TestSearchRecordReader {
         reader.close();
     }
 
-    private BiTuple<Search, ResultEntryDefinition> createSearchTuple() {
-        return new BiTuple<>(
+    private Pair<Search, ResultEntryDefinition> createSearchTuple() {
+        return Pair.of(
                 Search.create(
                         1,
                         "name",

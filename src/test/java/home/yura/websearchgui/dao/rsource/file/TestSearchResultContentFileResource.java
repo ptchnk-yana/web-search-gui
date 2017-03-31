@@ -3,7 +3,7 @@ package home.yura.websearchgui.dao.rsource.file;
 import com.google.common.io.Files;
 import home.yura.websearchgui.model.SearchResult;
 import home.yura.websearchgui.model.SearchResultContent;
-import home.yura.websearchgui.util.bean.BiTuple;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.io.FileUtils;
 import org.junit.Test;
 
@@ -37,40 +37,40 @@ public class TestSearchResultContentFileResource {
 
     @Test
     public void add() throws Exception {
-        final BiTuple<SearchResult, SearchResultContent> tuple = input(1).stream().findFirst().orElse(null);
-        RESOURCE.add(tuple.getFirst(), tuple.getSecond()).get();
+        final Pair<SearchResult, SearchResultContent> tuple = input(1).stream().findFirst().orElse(null);
+        RESOURCE.add(tuple.getLeft(), tuple.getRight()).get();
     }
 
     @Test
     public void addBatch() throws Exception {
-        final List<BiTuple<SearchResult, SearchResultContent>> batch = input(3);
+        final List<Pair<SearchResult, SearchResultContent>> batch = input(3);
         RESOURCE.addBatch(batch).get();
     }
 
     @Test
     public void delete() throws Exception {
-        final BiTuple<SearchResult, SearchResultContent> tuple = input(1).stream().findFirst().orElse(null);
-        RESOURCE.add(tuple.getFirst(), tuple.getSecond()).get();
-        assertThat(RESOURCE.delete(tuple.getFirst()).get(), is(true));
-        assertThat(RESOURCE.delete(tuple.getFirst()).get(), is(false));
+        final Pair<SearchResult, SearchResultContent> tuple = input(1).stream().findFirst().orElse(null);
+        RESOURCE.add(tuple.getLeft(), tuple.getRight()).get();
+        assertThat(RESOURCE.delete(tuple.getLeft()).get(), is(true));
+        assertThat(RESOURCE.delete(tuple.getLeft()).get(), is(false));
     }
 
     @Test
     public void get() throws Exception {
-        final BiTuple<SearchResult, SearchResultContent> tuple = input(1).stream().findFirst().orElse(null);
-        RESOURCE.add(tuple.getFirst(), tuple.getSecond()).get();
+        final Pair<SearchResult, SearchResultContent> tuple = input(1).stream().findFirst().orElse(null);
+        RESOURCE.add(tuple.getLeft(), tuple.getRight()).get();
 
-        final SearchResultContent content = RESOURCE.get(tuple.getFirst()).get().orElse(null);
+        final SearchResultContent content = RESOURCE.get(tuple.getLeft()).get().orElse(null);
         assertThat(content, notNullValue());
-        assertThat(content, equalTo(tuple.getSecond()));
+        assertThat(content, equalTo(tuple.getRight()));
 
-        RESOURCE.delete(tuple.getFirst()).get();
-        assertThat(RESOURCE.get(tuple.getFirst()).get().isPresent(), is(false));
+        RESOURCE.delete(tuple.getLeft()).get();
+        assertThat(RESOURCE.get(tuple.getLeft()).get().isPresent(), is(false));
     }
 
-    private List<BiTuple<SearchResult, SearchResultContent>> input(final int number) {
+    private List<Pair<SearchResult, SearchResultContent>> input(final int number) {
         return range(0, number).mapToObj(Integer::valueOf).map(id ->
-            new BiTuple<>(
+            Pair.of(
                     randomSearchResult(id, null),
                     SearchResultContent.create(range(0, 1000).mapToObj(Integer::valueOf).collect(toList()).toString()))
         ).collect(toList());

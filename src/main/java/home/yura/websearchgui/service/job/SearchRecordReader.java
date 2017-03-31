@@ -5,8 +5,8 @@ import home.yura.websearchgui.model.Search;
 import home.yura.websearchgui.model.SearchResult;
 import home.yura.websearchgui.service.ValueEvaluator;
 import home.yura.websearchgui.util.LocalHttpUtils;
-import home.yura.websearchgui.util.bean.BiTuple;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -77,10 +77,10 @@ public class SearchRecordReader implements RecordReader {
                               final Supplier<CloseableHttpClient> httpClientSupplier,
                               final Long finalInternalId,
                               final int readLimit,
-                              final BiTuple<Search, ResultEntryDefinition> searchTuple) {
+                              final Pair<Search, ResultEntryDefinition> searchTuple) {
         requireNonNull(searchTuple, "searchTuple");
-        this.search = requireNonNull(searchTuple.getFirst(), "search");
-        this.resultEntryDefinition = requireNonNull(searchTuple.getSecond(), "resultEntryDefinition");
+        this.search = requireNonNull(searchTuple.getLeft(), "search");
+        this.resultEntryDefinition = requireNonNull(searchTuple.getRight(), "resultEntryDefinition");
         this.finalInternalId = finalInternalId; // can be null if this job has never run before.
         this.readLimit = readLimit;
         this.valueEvaluator = requireNonNull(valueEvaluator, "valueEvaluator");
@@ -90,7 +90,7 @@ public class SearchRecordReader implements RecordReader {
     @Override
     public void open() throws Exception {
         LOG.info("Opening reader");
-        this.client = httpClientSupplier.get();//HttpClientBuilder.create().build();
+        this.client = this.httpClientSupplier.get();//HttpClientBuilder.create().build();
         this.lastInternalId = new AtomicLong();
         this.readAmount = new AtomicInteger();
         this.nextUrlLink = this.search.getUrl();
@@ -113,7 +113,7 @@ public class SearchRecordReader implements RecordReader {
                 .sorted(Comparator.comparingLong(SearchResult::getInternalId))
                 .collect(toList());
         LOG.info("Read [" + entryBlocks.size() + "] blocks from [" + document.baseUri() + "] and converted it to ["
-                + searchResults.size() + "]");
+                + searchResults.size() + "] results");
 
         this.nextUrlLink = evaluateNextUrlLinkValue(document);
 

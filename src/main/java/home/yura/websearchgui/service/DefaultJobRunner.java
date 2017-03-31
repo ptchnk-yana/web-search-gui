@@ -7,7 +7,7 @@ import home.yura.websearchgui.dao.rsource.SearchResultContentResource;
 import home.yura.websearchgui.model.ResultEntryDefinition;
 import home.yura.websearchgui.model.Search;
 import home.yura.websearchgui.service.job.*;
-import home.yura.websearchgui.util.bean.BiTuple;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -65,12 +65,12 @@ public class DefaultJobRunner implements JobRunner {
     }
 
     @Override
-    public Job createSearchJob(final BiTuple<Search, ResultEntryDefinition> searchTuple,
+    public Job createSearchJob(final Pair<Search, ResultEntryDefinition> searchTuple,
                                final int readLimit) {
         checkTupleArgument(searchTuple);
         LOG.debug("Creating search job [" + searchTuple + "] with limit [" + readLimit + "]");
         final SearchJobListener jobListener = new SearchJobListener(
-                this.localJobDao, searchTuple.getFirst(), "append_results");
+                this.localJobDao, searchTuple.getLeft(), "append_results");
 
         return createAbstractSearchJob(searchTuple,
                 this.errorThreshold,
@@ -80,26 +80,26 @@ public class DefaultJobRunner implements JobRunner {
     }
 
     @Override
-    public Job createFilterJob(final BiTuple<Search, ResultEntryDefinition> searchTuple) {
+    public Job createFilterJob(final Pair<Search, ResultEntryDefinition> searchTuple) {
         checkTupleArgument(searchTuple);
         LOG.debug("Creating filtering job [" + searchTuple + "]");
         final SearchJobListener jobListener = new SearchJobListener(
-                this.localJobDao, searchTuple.getFirst(), "filter_results-" + Instant.now());
+                this.localJobDao, searchTuple.getLeft(), "filter_results-" + Instant.now());
 
         return createAbstractSearchJob(searchTuple,
                 this.errorThreshold,
                 jobListener,
-                new ExistingSearchRecordReader(this.searchResultDao, searchTuple.getFirst(), SearchResultDao.BATCH_SIZE),
+                new ExistingSearchRecordReader(this.searchResultDao, searchTuple.getLeft(), SearchResultDao.BATCH_SIZE),
                 new SearchResultRecordWriter(this.searchResultDao::updateBatch, Optional.empty()));
     }
 
-    private void checkTupleArgument(final BiTuple<Search, ResultEntryDefinition> searchTuple) {
+    private void checkTupleArgument(final Pair<Search, ResultEntryDefinition> searchTuple) {
         requireNonNull(searchTuple, "searchTuple");
-        requireNonNull(searchTuple.getFirst(), "Search");
-        requireNonNull(searchTuple.getSecond(), "ResultEntryDefinition");
+        requireNonNull(searchTuple.getLeft(), "Search");
+        requireNonNull(searchTuple.getRight(), "ResultEntryDefinition");
     }
 
-    private Job createAbstractSearchJob(final BiTuple<Search, ResultEntryDefinition> searchTuple,
+    private Job createAbstractSearchJob(final Pair<Search, ResultEntryDefinition> searchTuple,
                                         final long errorThreshold,
                                         final SearchJobListener jobListener,
                                         final RecordReader recordReader,
@@ -115,11 +115,11 @@ public class DefaultJobRunner implements JobRunner {
                         this.httpQueryPool,
                         this.valueEvaluator,
                         this.httpClientSupplier,
-                        searchTuple.getSecond()))
+                        searchTuple.getRight()))
                 .processor(new SearchApplyFiltersRecordProcessor(
                         this.filterDao,
                         this.filterMatcher,
-                        searchTuple.getSecond()))
+                        searchTuple.getRight()))
                 .writer(recordWriter)
                 .errorThreshold(errorThreshold)
                 .batchSize(this.batchSize)

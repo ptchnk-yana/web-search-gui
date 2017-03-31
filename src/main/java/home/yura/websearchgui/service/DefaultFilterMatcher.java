@@ -9,7 +9,7 @@ import home.yura.websearchgui.model.FilterItem;
 import home.yura.websearchgui.model.FilterItem.FilterEngine;
 import home.yura.websearchgui.model.FilterItem.FilterLocation;
 import home.yura.websearchgui.model.FilterItem.FilterPreFormatting;
-import home.yura.websearchgui.util.bean.ThreeTuple;
+import org.apache.commons.lang3.tuple.Triple;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jsoup.Jsoup;
@@ -73,33 +73,33 @@ public class DefaultFilterMatcher implements FilterMatcher {
     }
 
     static class MatcherFactory {
-        final Map<ThreeTuple<FilterLocation, FilterEngine, FilterPreFormatting>, Matcher> map;
+        final Map<Triple<FilterLocation, FilterEngine, FilterPreFormatting>, Matcher> map;
 
         MatcherFactory() {
-            this.map = ImmutableMap.<ThreeTuple<FilterLocation, FilterEngine, FilterPreFormatting>, Matcher>builder()
-                    .put(new ThreeTuple<>(URL, REG_EXP, NO), (e, d) ->
+            this.map = ImmutableMap.<Triple<FilterLocation, FilterEngine, FilterPreFormatting>, Matcher>builder()
+                    .put(Triple.of(URL, REG_EXP, NO), (e, d) ->
                             PATTERN_CACHE.getUnchecked(e).matcher(getBaseUri(d)).find())
-                    .put(new ThreeTuple<>(URL, REG_EXP, CLEAR_HTML), (e, d) ->
+                    .put(Triple.of(URL, REG_EXP, CLEAR_HTML), (e, d) ->
                             PATTERN_CACHE.getUnchecked(e).matcher(Jsoup.parse(getBaseUri(d)).text()).find())
-                    .put(new ThreeTuple<>(URL, REG_EXP, ESCAPE_URL), (e, d) ->
+                    .put(Triple.of(URL, REG_EXP, ESCAPE_URL), (e, d) ->
                             PATTERN_CACHE.getUnchecked(e).matcher(decodeUrl(getBaseUri(d))).find())
-                    .put(new ThreeTuple<>(URL, STRING_SEARCH, NO), (e, d) ->
+                    .put(Triple.of(URL, STRING_SEARCH, NO), (e, d) ->
                             getBaseUri(d).contains(e))
-                    .put(new ThreeTuple<>(URL, STRING_SEARCH, CLEAR_HTML), (e, d) ->
+                    .put(Triple.of(URL, STRING_SEARCH, CLEAR_HTML), (e, d) ->
                             Jsoup.parse(getBaseUri(d)).text().contains(e))
-                    .put(new ThreeTuple<>(URL, STRING_SEARCH, ESCAPE_URL), (e, d) ->
+                    .put(Triple.of(URL, STRING_SEARCH, ESCAPE_URL), (e, d) ->
                             decodeUrl(getBaseUri(d)).contains(e))
-                    .put(new ThreeTuple<>(CONTENT, REG_EXP, NO), (e, d) ->
+                    .put(Triple.of(CONTENT, REG_EXP, NO), (e, d) ->
                             PATTERN_CACHE.getUnchecked(e).matcher(d.outerHtml()).find())
-                    .put(new ThreeTuple<>(CONTENT, REG_EXP, CLEAR_HTML), (e, d) ->
+                    .put(Triple.of(CONTENT, REG_EXP, CLEAR_HTML), (e, d) ->
                             PATTERN_CACHE.getUnchecked(e).matcher(d.text()).find())
-                    .put(new ThreeTuple<>(CONTENT, REG_EXP, ESCAPE_URL), (e, d) ->
+                    .put(Triple.of(CONTENT, REG_EXP, ESCAPE_URL), (e, d) ->
                             PATTERN_CACHE.getUnchecked(e).matcher(decodeUrl(d.text())).find())
-                    .put(new ThreeTuple<>(CONTENT, STRING_SEARCH, NO), (e, d) ->
+                    .put(Triple.of(CONTENT, STRING_SEARCH, NO), (e, d) ->
                             d.outerHtml().contains(e))
-                    .put(new ThreeTuple<>(CONTENT, STRING_SEARCH, CLEAR_HTML), (e, d) ->
+                    .put(Triple.of(CONTENT, STRING_SEARCH, CLEAR_HTML), (e, d) ->
                             d.text().contains(e))
-                    .put(new ThreeTuple<>(CONTENT, STRING_SEARCH, ESCAPE_URL), (e, d) ->
+                    .put(Triple.of(CONTENT, STRING_SEARCH, ESCAPE_URL), (e, d) ->
                             decodeUrl(d.text()).contains(e))
                     .build();
         }
@@ -113,7 +113,7 @@ public class DefaultFilterMatcher implements FilterMatcher {
         }
 
         Matcher get(final FilterItem item) {
-            return requireNonNull(this.map.get(new ThreeTuple<>(
+            return requireNonNull(this.map.get(Triple.of(
                     requireNonNull(item.getFilterLocation(), "FilterItemLocation"),
                     requireNonNull(item.getFilterEngine(), "FilterItemEngine"),
                     requireNonNull(item.getFilterPreFormatting(), "FilterItemPreFormatting"))));

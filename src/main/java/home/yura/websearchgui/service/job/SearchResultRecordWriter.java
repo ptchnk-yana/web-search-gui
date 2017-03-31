@@ -5,8 +5,7 @@ import home.yura.websearchgui.dao.rsource.SearchResultContentResource;
 import home.yura.websearchgui.model.SearchResult;
 import home.yura.websearchgui.model.SearchResultContent;
 import home.yura.websearchgui.util.LocalFunctions;
-import home.yura.websearchgui.util.bean.BiTuple;
-import home.yura.websearchgui.util.bean.Tuple;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.easybatch.core.record.Batch;
@@ -31,7 +30,7 @@ public class SearchResultRecordWriter implements RecordWriter {
 
     private final Function<List<SearchResult>, ?> saveSearchResultFunction;
     @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
-    private final Optional<Function<List<BiTuple<SearchResult, SearchResultContent>>, Future<?>>> saveSearchResultContentFunction;
+    private final Optional<Function<List<Pair<SearchResult, SearchResultContent>>, Future<?>>> saveSearchResultContentFunction;
 
     private final List<Future<?>> savedFutures = new ArrayList<>();
 
@@ -46,7 +45,7 @@ public class SearchResultRecordWriter implements RecordWriter {
 
     public SearchResultRecordWriter(final Function<List<SearchResult>, ?> saveSearchResultFunction,
                                     @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
-                                    final Optional<Function<List<BiTuple<SearchResult, SearchResultContent>>, Future<?>>> saveSearchResultContentFunction) {
+                                    final Optional<Function<List<Pair<SearchResult, SearchResultContent>>, Future<?>>> saveSearchResultContentFunction) {
         this.saveSearchResultFunction = requireNonNull(saveSearchResultFunction, "saveSearchResultFunction");
         this.saveSearchResultContentFunction = requireNonNull(saveSearchResultContentFunction);
     }
@@ -69,15 +68,15 @@ public class SearchResultRecordWriter implements RecordWriter {
     @Override
     public void writeRecords(final Batch batch) throws Exception {
         LOG.info("Writing batch [" + batch.size() + "]");
-        for (@SuppressWarnings("unchecked") final Record<List<Future<BiTuple<SearchResult, SearchResultContent>>>> record : batch) {
-            final List<BiTuple<SearchResult, SearchResultContent>> request = record
+        for (@SuppressWarnings("unchecked") final Record<List<Future<Pair<SearchResult, SearchResultContent>>>> record : batch) {
+            final List<Pair<SearchResult, SearchResultContent>> request = record
                     .getPayload()
                     .stream()
                     .map(LocalFunctions::getFromFuture)
-                    .sorted(Comparator.comparingLong(o -> o.getFirst().getInternalId()))
+                    .sorted(Comparator.comparingLong(o -> o.getLeft().getInternalId()))
                     .collect(toList());
-            this.saveSearchResultContentFunction.ifPresent(f -> savedFutures.add(f.apply(request)));
-            this.saveSearchResultFunction.apply(request.stream().map(Tuple::getFirst).collect(toList()));
+            this.saveSearchResultContentFunction.ifPresent(f -> this.savedFutures.add(f.apply(request)));
+            this.saveSearchResultFunction.apply(request.stream().map(Pair::getLeft).collect(toList()));
         }
     }
 }

@@ -5,7 +5,7 @@ import home.yura.websearchgui.dao.SearchResultDao;
 import home.yura.websearchgui.dao.rsource.SearchResultContentResource;
 import home.yura.websearchgui.model.SearchResult;
 import home.yura.websearchgui.model.SearchResultContent;
-import home.yura.websearchgui.util.bean.BiTuple;
+import org.apache.commons.lang3.tuple.Pair;
 import org.easybatch.core.record.Batch;
 import org.easybatch.core.record.GenericRecord;
 import org.easybatch.core.record.Header;
@@ -40,7 +40,7 @@ public class TestSearchResultRecordWriter {
         verify(contentResource, times(3)).addBatch(anyCollection());
     }
 
-    private GenericRecord<List<Future<BiTuple<SearchResult, SearchResultContent>>>> record() {
+    private GenericRecord<List<Future<Pair<SearchResult, SearchResultContent>>>> record() {
         return new GenericRecord<>(header(), input(40));
     }
 
@@ -48,12 +48,12 @@ public class TestSearchResultRecordWriter {
         return new Header(System.currentTimeMillis(), randomString(), new Date());
     }
 
-    private List<Future<BiTuple<SearchResult, SearchResultContent>>> input(final int number) {
+    private List<Future<Pair<SearchResult, SearchResultContent>>> input(final int number) {
         return range(0, number).mapToObj(Integer::valueOf).map(this::futureTuple).collect(toList());
     }
 
-    private Future<BiTuple<SearchResult, SearchResultContent>> futureTuple(final int id) {
-        return Futures.immediateFuture(new BiTuple<>(
+    private Future<Pair<SearchResult, SearchResultContent>> futureTuple(final int id) {
+        return Futures.immediateFuture(Pair.of(
                 SearchResult.create(null, randomString(), randomString(), 1, null, System.currentTimeMillis(), randomString(), false),
                 SearchResultContent.create(range(0, 1000).mapToObj(Integer::valueOf).collect(toList()).toString())
         ));

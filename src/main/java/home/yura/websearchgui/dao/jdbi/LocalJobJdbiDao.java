@@ -4,7 +4,7 @@ import com.google.common.collect.ImmutableMap;
 import home.yura.websearchgui.dao.LocalJobDao;
 import home.yura.websearchgui.model.LocalJob;
 import home.yura.websearchgui.util.LocalJdbis;
-import home.yura.websearchgui.util.bean.BiTuple;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.skife.jdbi.v2.DBI;
@@ -31,13 +31,13 @@ public class LocalJobJdbiDao implements LocalJobDao {
     private static final Log LOG = LogFactory.getLog(LocalJobJdbiDao.class);
     private static final String INSERT_QUERY = LocalJdbis.createInsertFromSelectQuery(
             "local_job",
-            ImmutableMap.<String, BiTuple<String, String>>builder()
-                    .put("j.name", new BiTuple<>("name", "CHAR(40)"))
-                    .put("j.firstStep", new BiTuple<>("first_step", "SIGNED"))
-                    .put("j.lastStep", new BiTuple<>("last_step", "SIGNED"))
-                    .put("j.requiredStep", new BiTuple<>("required_step", "SIGNED"))
-                    .put("j.destinationId", new BiTuple<>("destination_id", "SIGNED"))
-                    .put("j.status", new BiTuple<>("status", "CHAR(8)")).build(),
+            ImmutableMap.<String, Pair<String, String>>builder()
+                    .put("j.name", Pair.of("name", "CHAR(40)"))
+                    .put("j.firstStep", Pair.of("first_step", "SIGNED"))
+                    .put("j.lastStep", Pair.of("last_step", "SIGNED"))
+                    .put("j.requiredStep", Pair.of("required_step", "SIGNED"))
+                    .put("j.destinationId", Pair.of("destination_id", "SIGNED"))
+                    .put("j.status", Pair.of("status", "CHAR(8)")).build(),
             ImmutableMap.of("j.name", "name", "j.destinationId", "destination_id"),
             "(required_step = :j.requiredStep OR status IN ('STARTED', 'RUNNING'))");
 

@@ -20,7 +20,7 @@ public abstract class ValueEvaluationDefinition implements AbstractModel {
         }
 
         public boolean isContentModifying() {
-            return contentModifying;
+            return this.contentModifying;
         }
     }
 

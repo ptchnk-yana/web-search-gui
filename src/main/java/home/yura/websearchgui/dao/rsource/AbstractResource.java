@@ -2,7 +2,7 @@ package home.yura.websearchgui.dao.rsource;
 
 import home.yura.websearchgui.model.SearchResult;
 import home.yura.websearchgui.model.SearchResultContent;
-import home.yura.websearchgui.util.bean.BiTuple;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.Collection;
 import java.util.Optional;
@@ -15,7 +15,7 @@ public interface AbstractResource<Metadata, Content> {
 
     Future<Void> add(final Metadata m, final Content c);
 
-    Future<Void> addBatch(final Collection<BiTuple<SearchResult, SearchResultContent>> batch);
+    Future<Void> addBatch(final Collection<Pair<SearchResult, SearchResultContent>> batch);
 
     Future<Boolean> delete(final Metadata m);
 

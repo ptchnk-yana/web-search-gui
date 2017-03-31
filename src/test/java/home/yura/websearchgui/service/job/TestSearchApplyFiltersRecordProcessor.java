@@ -5,7 +5,7 @@ import com.google.common.util.concurrent.Futures;
 import home.yura.websearchgui.dao.FilterDao;
 import home.yura.websearchgui.model.*;
 import home.yura.websearchgui.service.DefaultFilterMatcher;
-import home.yura.websearchgui.util.bean.BiTuple;
+import org.apache.commons.lang3.tuple.Pair;
 import org.easybatch.core.record.GenericRecord;
 import org.easybatch.core.record.Header;
 import org.easybatch.core.record.Record;
@@ -50,16 +50,16 @@ public class TestSearchApplyFiltersRecordProcessor {
                 new DefaultFilterMatcher(), ResultEntryDefinition.create(null, 1, "", null, null, null, null));
 
 
-        final ImmutableList<Future<BiTuple<SearchResult, SearchResultContent>>> request = of(futureTuple(PAGE_1_LOCATION),
+        final ImmutableList<Future<Pair<SearchResult, SearchResultContent>>> request = of(futureTuple(PAGE_1_LOCATION),
                 futureTuple(PAGE_2_LOCATION), futureTuple(PAGE_3_LOCATION));
 
-        final Record<List<Future<BiTuple<SearchResult, SearchResultContent>>>> result = processor
+        final Record<List<Future<Pair<SearchResult, SearchResultContent>>>> result = processor
                 .processRecord(new GenericRecord<>(new Header(1L, "", new Date()), request));
 
         assertThat(result.getPayload(), both(notNullValue()).and(not(sameInstance(request))));
 
         final List<Integer> filterIds = result.getPayload().stream()
-                .map(f -> process(f::get).getFirst().getFilterItemId()).collect(toList());
+                .map(f -> process(f::get).getLeft().getFilterItemId()).collect(toList());
         assertThat(filterIds, hasSize(3));
         assertThat(filterIds, hasItems(firstFilterId, firstFilterId, firstFilterId));
     }
@@ -74,10 +74,10 @@ public class TestSearchApplyFiltersRecordProcessor {
                 new DefaultFilterMatcher(), ResultEntryDefinition.create(null, 1, "", null, null, null, null));
 
 
-        final ImmutableList<Future<BiTuple<SearchResult, SearchResultContent>>> request = of(
+        final ImmutableList<Future<Pair<SearchResult, SearchResultContent>>> request = of(
                 Futures.immediateFailedFuture(new AssertionError()));
 
-        final Record<List<Future<BiTuple<SearchResult, SearchResultContent>>>> result = processor
+        final Record<List<Future<Pair<SearchResult, SearchResultContent>>>> result = processor
                 .processRecord(new GenericRecord<>(new Header(1L, "", new Date()), request));
 
         assertThat(result.getPayload(), both(notNullValue()).and(sameInstance(request)));
@@ -95,8 +95,8 @@ public class TestSearchApplyFiltersRecordProcessor {
                 .build();
     }
 
-    private Future<BiTuple<SearchResult, SearchResultContent>> futureTuple(final String contentPath) {
-        return Futures.immediateFuture(new BiTuple<>(
+    private Future<Pair<SearchResult, SearchResultContent>> futureTuple(final String contentPath) {
+        return Futures.immediateFuture(Pair.of(
                 SearchResult.create(null, randomString(), randomString(), 1, null, System.currentTimeMillis(), randomString(), false),
                 SearchResultContent.create(readGzipResource(contentPath))
         ));
